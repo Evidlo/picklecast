@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="webrtc.js"></script>
+    <style>
+      html {
+          margin: 0;
+      }
+      </style>
+  </head>
+
+  <body>
+    <input type="button" id="start" onclick="start_screenshare()" value="Start Screen Share"></input>
+
+    <br />
+
+    <video id="localVideo" autoplay muted style="width:100%;"></video>
+
+    <script type="text/javascript">
+        pageReady();
+    </script>
+  </body>
+</html>
