@@ -81,7 +81,7 @@ async def on_connect(ws):
     await ws.send(json.dumps(
         {
             "sender": "server",
-            "message": {"version": f"escreencast {__version__}", "address": address}
+            "message": {"version": f"picklecast {__version__}", "address": address}
         }
     ))
 

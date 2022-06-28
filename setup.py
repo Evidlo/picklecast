@@ -5,19 +5,19 @@ with open("README.md") as f:
 
 version = {}
 # manually read version from file
-with open("escreencast/version.py") as file:
+with open("picklecast/version.py") as file:
     exec(file.read(), version)
 
 setup(
     # some basic project information
-    name="escreencast",
+    name="picklecast",
     version=version["__version__"],
     license="GPL3",
     description="Example python project",
     long_description=README,
     author="Evan Widloski",
     author_email="evan_ex@widloski.com",
-    url="https://github.com/evidlo/escreencast",
+    url="https://github.com/evidlo/picklecast",
     # your project's pip dependencies
     install_requires=[
         "websockets"
@@ -28,7 +28,7 @@ setup(
     # if you want your code to be able to run directly from command line
     entry_points={
         'console_scripts': [
-            'escreencast = escreencast.escreencast:main',
+            'picklecast = picklecast.picklecast:main',
         ]
     },
 )
