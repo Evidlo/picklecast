@@ -3,9 +3,12 @@
 import asyncio
 import functools
 from http import HTTPStatus
+import json
 import os
+import socket
 import ssl
 import websockets
+from .version import __version__
 
 MIME_TYPES = {
     "html": "text/html",
@@ -14,6 +17,20 @@ MIME_TYPES = {
 }
 
 connections = set()
+
+# thanks to https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
 
 # thanks to https://gist.github.com/artizirk/04eb23d957d7916c01ca632bb27d5436
 async def process_request(sever_root, path, request_headers):
@@ -56,18 +73,25 @@ async def on_connect(ws):
     print("client connected")
     # maintain list of connected clients
     connections.add(ws)
-    # try:
-    #     await ws.wait_closed()
-    # finally:
-    #     connections.remove(ws)
+    address = f"https://{get_ip()}:{ws.port}"
+    await ws.send(json.dumps(
+        {
+            "sender": "server",
+            "message": {"version": f"escreencast {__version__}", "address": address}
+        }
+    ))
 
     # broadcast every message received to all clients
     async for message in ws:
-        print("received:" + str(message))
         for connection in connections:
             if connection.open:
-                print("sending")
-                await connection.send(message)
+                await connection.send(json.dumps(
+                    {
+                        "sender": "client",
+                        "message": json.loads(message)
+                    }
+                ))
+                # await connection.send("{{\"sender\":\"client\", \"message\":{}}}".format(message))
         # await ws.broadcast(connections, message)
 
 async def run(args):

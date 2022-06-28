@@ -1,9 +1,10 @@
-var localVideo;
+// var localVideo;
 var localStream;
 var remoteVideo;
 var peerConnection;
 var uuid;
 var serverConnection;
+var displayIP;
 
 var peerConnectionConfig = {
   'iceServers': [
@@ -15,8 +16,11 @@ var peerConnectionConfig = {
 function pageReady() {
   uuid = createUUID();
 
-  localVideo = document.getElementById('localVideo');
+  // localVideo = document.getElementById('localVideo');
   remoteVideo = document.getElementById('remoteVideo');
+  displayGUI = document.getElementById('displayGUI');
+  displayIPs = Array.from(document.getElementsByClassName("displayIP"));
+  displayVersion = document.getElementById("displayVersion")
 
   serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
   serverConnection.onmessage = gotMessageFromServer;
@@ -26,55 +30,68 @@ function getUserMediaSuccess(stream) {
   localStream = stream;
   // show screen shared video
   // localVideo.srcObject = stream;
-  start(true);
+  openWebRTCConnection();
+  peerConnection.createOffer().then(createdDescription).catch(errorHandler);
+  console.log("Sharing screen to display computer")
+  peerConnection.addStream(localStream);
 }
 
-function start_screenshare() {
+function startScreenshare() {
   var constraints = {
     video: {
       cursor: "always"
     },
     audio: false
   };
-  if(navigator.mediaDevices.getUserMedia) {
+  if(navigator.mediaDevices.getDisplayMedia) {
     navigator.mediaDevices.getDisplayMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
   } else {
-    alert('Your browser does not support getUserMedia API');
+    alert('Your browser does not support getDisplayMedia API');
   }
 }
 
-function start(isCaller) {
-
-
+function openWebRTCConnection() {
   peerConnection = new RTCPeerConnection(peerConnectionConfig);
   peerConnection.onicecandidate = gotIceCandidate;
   peerConnection.ontrack = gotRemoteStream;
-
-  if(isCaller) {
-    peerConnection.createOffer().then(createdDescription).catch(errorHandler);
-    peerConnection.addStream(localStream);
-  }
+  peerConnection.onconnectionstatechange = connectionStateChange;
 }
 
+
+// websocket message received from backend
 function gotMessageFromServer(message) {
-  if(!peerConnection) start(false);
+  if(!peerConnection) openWebRTCConnection();
 
-  console.log(message.data);
   var signal = JSON.parse(message.data);
-
-  // Ignore messages from ourself
-  if(signal.uuid == uuid) return;
-
-  if(signal.sdp) {
-    peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function() {
-      // Only create answers in response to offers
-      if(signal.sdp.type == 'offer') {
-        peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
+  // if message is from backend server
+  console.log(signal)
+  if (signal.sender == "server") {
+    displayIPs.forEach(
+      function(el, ind, arr) {
+        el.textContent = signal.message.address;
       }
-    }).catch(errorHandler);
-  } else if(signal.ice) {
-    peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
+    )
+    displayVersion.textContent = signal.message.version;
+    return
   }
+
+  // if message if from another browser
+  else if (signal.sender == "client") {
+    // Ignore messages from ourself
+    if(signal.message.uuid == uuid) return;
+
+    if(signal.message.sdp) {
+      peerConnection.setRemoteDescription(new RTCSessionDescription(signal.message.sdp)).then(function() {
+        // Only create answers in response to offers
+        if(signal.message.sdp.type == 'offer') {
+          peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
+        }
+      }).catch(errorHandler);
+    } else if(signal.message.ice) {
+      peerConnection.addIceCandidate(new RTCIceCandidate(signal.message.ice)).catch(errorHandler);
+    }
+  }
+
 }
 
 function gotIceCandidate(event) {
@@ -84,7 +101,6 @@ function gotIceCandidate(event) {
 }
 
 function createdDescription(description) {
-  console.log("Sharing screen to display computer")
 
   peerConnection.setLocalDescription(description).then(function() {
     serverConnection.send(JSON.stringify({'sdp': peerConnection.localDescription, 'uuid': uuid}));
@@ -92,8 +108,45 @@ function createdDescription(description) {
 }
 
 function gotRemoteStream(event) {
-  console.log('got remote stream');
+  console.log('Got remote stream');
+  displayGUI.style.display = 'none';
+  remoteVideo.style.display = 'block';
+  console.log("got streams:", event.streams)
+  // delete all old tracks
+  // if (remoteVideo.srcObject != null) {
+  //   remoteVideo.srcObject.getVideoTracks().forEach(track => {
+  //     track.stop()
+  //     remoteVideo.srcObject.removeTrack(track);
+  //   });
+  // }
   remoteVideo.srcObject = event.streams[0];
+}
+
+// websocket state change callback
+function connectionStateChange(event) {
+    switch(peerConnection.connectionState) {
+    case "new":
+    case "checking":
+      console.log("Connecting...");
+      break;
+    case "connected":
+      console.log("Online");
+      break;
+    case "disconnected":
+      console.log("Disconnecting...");
+      remoteVideo.style.display = 'none';
+      displayGUI.style.display = 'flex';
+      break;
+    case "closed":
+      console.log("Offline");
+      break;
+    case "failed":
+      console.log("Error");
+      break;
+    // default:
+    //   console.log("Unknown");
+    //   break;
+  }
 }
 
 function errorHandler(error) {
