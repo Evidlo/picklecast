@@ -25,6 +25,15 @@ setup(
     include_package_data=True,
     # automatically look for subfolders with __init__.py
     packages=find_packages(),
+    data_files=[
+        ('', [
+            'picklecast/localhost.pem',
+            'picklecast/index.html',
+            'picklecast/display.html',
+            'picklecast/webrtc.js',
+            'picklecast/background.jpg',
+        ]),
+    ],
     # if you want your code to be able to run directly from command line
     entry_points={
         'console_scripts': [

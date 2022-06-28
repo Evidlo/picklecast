@@ -105,15 +105,24 @@ async def run(args):
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     ssl_context.load_cert_chain(localhost_pem)
 
+    port = 8443
+
+    print("Server address:", get_ip())
+    print("Display URL:", f"https://localhost:{port}/display", f"  https://{get_ip()}:{port}/display")
+    print("Client URL:", f"https://{get_ip()}:{port}/")
+
     async with websockets.serve(on_connect, "0.0.0.0", 8443, ssl=ssl_context, process_request=handler):
         await asyncio.Future()
 
 
 def main():
-    asyncio.run(run(None))
+    try:
+        asyncio.run(run(None))
+    except KeyboardInterrupt:
+        print()
 
 if __name__ == "__main__":
-    main()
+        main()
 
 # const wss = new WebSocketServer({server: httpsServer});
 
