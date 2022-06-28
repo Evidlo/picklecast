@@ -16,6 +16,10 @@ MIME_TYPES = {
     "css": "text/css"
 }
 
+base_dir = os.path.dirname(os.path.realpath(__file__))
+localhost_pem = os.path.join(base_dir, 'localhost.pem')
+
+# websocket connections to clients
 connections = set()
 
 # thanks to https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
@@ -95,10 +99,10 @@ async def on_connect(ws):
         # await ws.broadcast(connections, message)
 
 async def run(args):
-    handler = functools.partial(process_request, os.getcwd())
+    # handler = functools.partial(process_request, os.getcwd())
+    handler = functools.partial(process_request, base_dir)
 
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    localhost_pem = os.path.abspath("localhost.pem")
     ssl_context.load_cert_chain(localhost_pem)
 
     async with websockets.serve(on_connect, "0.0.0.0", 8443, ssl=ssl_context, process_request=handler):
