@@ -37,7 +37,7 @@ def get_ip():
     return IP
 
 # thanks to https://gist.github.com/artizirk/04eb23d957d7916c01ca632bb27d5436
-async def process_request(sever_root, path, request_headers):
+async def process_request(path, request_headers):
     """Serves a file when doing a GET request with a valid path."""
 
     if "Upgrade" in request_headers:
@@ -54,10 +54,10 @@ async def process_request(sever_root, path, request_headers):
     ]
 
     # Derive full system path
-    full_path = os.path.realpath(os.path.join(sever_root, path[1:]))
+    full_path = os.path.realpath(os.path.join(base_dir, path[1:]))
 
     # Validate the path
-    if os.path.commonpath((sever_root, full_path)) != sever_root or \
+    if os.path.commonpath((base_dir, full_path)) != base_dir or \
             not os.path.exists(full_path) or not os.path.isfile(full_path):
         print("HTTP GET {} 404 NOT FOUND".format(path))
         return HTTPStatus.NOT_FOUND, [], b'404 NOT FOUND'
@@ -74,7 +74,6 @@ async def process_request(sever_root, path, request_headers):
     return HTTPStatus.OK, response_headers, body
 
 async def on_connect(ws):
-    print("client connected")
     # maintain list of connected clients
     connections.add(ws)
     address = f"https://{get_ip()}:{ws.port}"
@@ -95,13 +94,8 @@ async def on_connect(ws):
                         "message": json.loads(message)
                     }
                 ))
-                # await connection.send("{{\"sender\":\"client\", \"message\":{}}}".format(message))
-        # await ws.broadcast(connections, message)
 
 async def run(args):
-    # handler = functools.partial(process_request, os.getcwd())
-    handler = functools.partial(process_request, base_dir)
-
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     ssl_context.load_cert_chain(localhost_pem)
 
@@ -111,7 +105,7 @@ async def run(args):
     print("Display URL:", f"https://localhost:{port}/display", f"  https://{get_ip()}:{port}/display")
     print("Client URL:", f"https://{get_ip()}:{port}/")
 
-    async with websockets.serve(on_connect, "0.0.0.0", 8443, ssl=ssl_context, process_request=handler):
+    async with websockets.serve(on_connect, "0.0.0.0", 8443, ssl=ssl_context, process_request=process_request):
         await asyncio.Future()
 
 
@@ -123,25 +117,3 @@ def main():
 
 if __name__ == "__main__":
         main()
-
-# const wss = new WebSocketServer({server: httpsServer});
-
-# wss.on('connection', function(ws) {
-#   ws.on('message', function(message) {
-#     // Broadcast any received message to all clients
-#     console.log('received: %s', message);
-#     wss.broadcast(message);
-#   });
-# });
-
-# wss.on('error', function(error) {
-#   console.log(error);
-# })
-
-# wss.broadcast = function(data) {
-#   this.clients.forEach(function(client) {
-#     if(client.readyState === WebSocket.OPEN) {
-#       client.send(data);
-#     }
-#   });
-# };

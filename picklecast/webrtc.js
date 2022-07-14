@@ -28,15 +28,15 @@ function pageReady() {
 
 function getUserMediaSuccess(stream) {
   localStream = stream;
-  // show screen shared video
-  // localVideo.srcObject = stream;
-  openWebRTCConnection();
-  peerConnection.createOffer().then(createdDescription).catch(errorHandler);
-  console.log("Sharing screen to display computer")
   peerConnection.addStream(localStream);
+  peerConnection.createOffer().then(createdDescription).catch(errorHandler);
+  // localVideo.srcObject = stream;
 }
 
 function startScreenshare() {
+  peerConnection = new RTCPeerConnection(peerConnectionConfig);
+  peerConnection.onicecandidate = gotIceCandidate;
+
   var constraints = {
     video: {
       cursor: "always"
@@ -57,10 +57,10 @@ function openWebRTCConnection() {
   peerConnection.onconnectionstatechange = connectionStateChange;
 }
 
-
 // websocket message received from backend
 function gotMessageFromServer(message) {
   if(!peerConnection) openWebRTCConnection();
+
 
   var signal = JSON.parse(message.data);
   // if message is from backend server
@@ -101,7 +101,6 @@ function gotIceCandidate(event) {
 }
 
 function createdDescription(description) {
-
   peerConnection.setLocalDescription(description).then(function() {
     serverConnection.send(JSON.stringify({'sdp': peerConnection.localDescription, 'uuid': uuid}));
   }).catch(errorHandler);
@@ -109,16 +108,10 @@ function createdDescription(description) {
 
 function gotRemoteStream(event) {
   console.log('Got remote stream');
+  // hide gui, show video
   displayGUI.style.display = 'none';
   remoteVideo.style.display = 'block';
-  console.log("got streams:", event.streams)
-  // delete all old tracks
-  // if (remoteVideo.srcObject != null) {
-  //   remoteVideo.srcObject.getVideoTracks().forEach(track => {
-  //     track.stop()
-  //     remoteVideo.srcObject.removeTrack(track);
-  //   });
-  // }
+
   remoteVideo.srcObject = event.streams[0];
 }
 
@@ -134,8 +127,10 @@ function connectionStateChange(event) {
       break;
     case "disconnected":
       console.log("Disconnecting...");
-      remoteVideo.style.display = 'none';
-      displayGUI.style.display = 'flex';
+      // show gui, hide video
+      // displayGUI.style.display = 'flex';
+      // remoteVideo.style.display = 'none';
+      window.location.reload();
       break;
     case "closed":
       console.log("Offline");
