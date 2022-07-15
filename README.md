@@ -1,6 +1,8 @@
 # picklecast - Evan's Screen Cast Receiver
 
-Screen share from your laptop or phone via web-browser to a computer connected to a projector or display TV.
+Screen share from your laptop or phone via web-browser to a computer or RaspberryPi connected to a projector or display TV.
+
+![](screenshot.png)
 
 ## Quickstart
 
@@ -12,10 +14,14 @@ Screen share from your laptop or phone via web-browser to a computer connected t
     
 Then connect to the display URL from display computer, and the client URL from your personal device.
     
-Also run as a systemd service
+Optionally install a systemd service (Linux)
 
     picklecast install_service ~/.config/systemd/user
     systemctl --user daemon-reload
     systemctl --user start picklecast
 
-## Usage
+## How it Works
+
+Picklecast is just a Python program that serves HTML and relays handshake messages between two browsers.  The streaming and displaying is handled in Javascript in the display/client browsers using the WebRTC api.
+
+![](architecture.svg)

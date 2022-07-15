@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="202.67084mm"
+   height="140.06726mm"
+   viewBox="0 0 202.67084 140.06726"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="architecture.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#d9d9d9"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="false"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:snap-bbox="false"
+     inkscape:snap-midpoints="true"
+     showguides="false"
+     inkscape:guide-bbox="true"
+     inkscape:snap-grids="true"
+     inkscape:snap-others="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="0.57816358"
+     inkscape:cx="294.03443"
+     inkscape:cy="172.96143"
+     inkscape:window-width="1674"
+     inkscape:window-height="1021"
+     inkscape:window-x="0"
+     inkscape:window-y="23"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <sodipodi:guide
+       position="160.70548,259.90416"
+       orientation="0,-1"
+       id="guide881" />
+    <inkscape:grid
+       type="xygrid"
+       id="grid5659"
+       spacingx="5.2916667"
+       spacingy="5.2916667"
+       originx="-4.4979167"
+       originy="-258.49791" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2">
+    <marker
+       style="overflow:visible"
+       id="Arrow2Send"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Send"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.3,0,0,-0.3,0.69,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.625;stroke-linejoin:round"
+         id="path8530" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow2Sstart"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Sstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.3,0,0,0.3,-0.69,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.625;stroke-linejoin:round"
+         id="path8527" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-4.4979165,-258.49791)">
+    <rect
+       style="fill:none;stroke:#555753;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1122"
+       width="84.666664"
+       height="95.250015"
+       x="121.70834"
+       y="291.04166" />
+    <rect
+       style="fill:none;stroke:#555753;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1122-3"
+       width="84.666672"
+       height="95.250015"
+       x="5.2916665"
+       y="291.04166" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.76111px;line-height:3.88055px;font-family:'Liberation Serif';-inkscape-font-specification:'Liberation Serif';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:none;stroke:#000000;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       x="47.300987"
+       y="314.87433"
+       id="text2880"><tspan
+         sodipodi:role="line"
+         id="tspan2878"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.76111px;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5875"
+         x="47.300987"
+         y="314.87433">Browser</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.76111px;line-height:3.88055px;font-family:'Liberation Serif';-inkscape-font-specification:'Liberation Serif';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:none;stroke:#000000;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       x="163.74229"
+       y="367.98804"
+       id="text2880-7-6"><tspan
+         sodipodi:role="line"
+         id="tspan2878-5-2"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.76111px;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5875"
+         x="163.74229"
+         y="367.98804">Picklecast</tspan></text>
+    <path
+       style="fill:#555753;fill-opacity:1;stroke:#000000;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       d="M 79.374999,312.20833 H 132.29166"
+       id="path8462" />
+    <path
+       style="fill:#555753;fill-opacity:1;stroke:#000000;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       d="m 164.04166,354.54166 v -31.75"
+       id="path8839" />
+    <path
+       style="fill:#555753;fill-opacity:1;stroke:#000000;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       d="M 164.04167,301.625 V 280.45834"
+       id="path8839-0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       d="M 132.29166,365.125 H 47.624999 v -42.33334"
+       id="path8973" />
+    <rect
+       style="fill:none;stroke:#555753;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1292"
+       width="63.5"
+       height="21.166655"
+       x="15.875"
+       y="301.625" />
+    <rect
+       style="fill:none;stroke:#555753;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1292-6"
+       width="63.5"
+       height="21.166668"
+       x="132.29167"
+       y="301.625" />
+    <rect
+       style="fill:none;stroke:#555753;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1292-6-9"
+       width="63.5"
+       height="21.166668"
+       x="132.29167"
+       y="259.29166" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.76111px;line-height:3.88055px;font-family:'Liberation Serif';-inkscape-font-specification:'Liberation Serif';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:none;stroke:#000000;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       x="163.71767"
+       y="314.87433"
+       id="text2880-7"><tspan
+         sodipodi:role="line"
+         id="tspan2878-5"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.76111px;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5875"
+         x="163.71767"
+         y="314.87433">Browser</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.76111px;line-height:3.88055px;font-family:'Liberation Serif';-inkscape-font-specification:'Liberation Serif';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:none;stroke:#000000;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       x="163.6665"
+       y="271.86642"
+       id="text2880-7-3"><tspan
+         sodipodi:role="line"
+         id="tspan2878-5-6"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.76111px;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5875"
+         x="163.6665"
+         y="271.86642">Projector/TV</tspan></text>
+    <rect
+       style="fill:none;stroke:#555753;stroke-width:1.5875;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1292-6-5"
+       width="63.500004"
+       height="21.166674"
+       x="132.29167"
+       y="354.54166" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.2889px;line-height:3.175px;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       x="95.25"
+       y="365.125"
+       id="text11611"><tspan
+         sodipodi:role="line"
+         id="tspan11609"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.587"
+         x="95.25"
+         y="365.125" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.78593px;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       x="93.390366"
+       y="361.58289"
+       id="text14453"><tspan
+         sodipodi:role="line"
+         id="tspan14451"
+         style="font-size:6.35px;stroke-width:1.587"
+         x="93.390366"
+         y="361.58289">Websocket Handshake</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       x="143.36151"
+       y="337.76709"
+       id="text14453-9"><tspan
+         sodipodi:role="line"
+         style="font-size:6.35px;stroke-width:1.587"
+         x="143.36151"
+         y="339.29257"
+         id="tspan23702">Websocket</tspan><tspan
+         sodipodi:role="line"
+         style="font-size:6.35px;stroke-width:1.587"
+         x="143.36151"
+         y="345.64258"
+         id="tspan36018">Handshake</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       x="106.31985"
+       y="308.66302"
+       id="text14453-9-2"><tspan
+         sodipodi:role="line"
+         style="font-size:6.35px;stroke-width:1.587"
+         x="106.31985"
+         y="308.66302"
+         id="tspan23702-0">WebRTC Video</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.7611px;line-height:3.175px;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       x="47.427944"
+       y="396.875"
+       id="text32278"><tspan
+         sodipodi:role="line"
+         id="tspan32276"
+         style="stroke-width:1.587"
+         x="47.427944"
+         y="396.875">Client Computer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.7611px;line-height:3.175px;font-family:'Futura Bk BT';-inkscape-font-specification:'Futura Bk BT';text-align:center;text-decoration:none;text-decoration-line:none;text-decoration-color:#000000;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.587;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       x="164.04167"
+       y="396.875"
+       id="text32744"><tspan
+         sodipodi:role="line"
+         id="tspan32742"
+         style="stroke-width:1.587"
+         x="164.04167"
+         y="396.875">Display Computer</tspan></text>
+  </g>
+</svg>
