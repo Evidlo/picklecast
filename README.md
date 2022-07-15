@@ -1,6 +1,6 @@
-# picklecast - Evan's Screen Cast Receiver
+# picklecast - Simple Screen Cast Receiver
 
-Screen share from your laptop or phone via web-browser to a computer or RaspberryPi connected to a projector or display TV.
+Screen share from a web-browser to a RaspberryPi or display computer connected to a projector or TV.
 
 ![](screenshot.png)
 
