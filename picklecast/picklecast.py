@@ -115,8 +115,12 @@ def run(*, port, host, basedir, certificate, **_):
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     ssl_context.load_cert_chain(Path(certificate).expanduser())
 
-    print("Server address:", host)
-    print("Display URL:", f"https://localhost:{port}/display", f"  https://{host}:{port}/display")
+    if host == '0.0.0.0':
+        print("Server address:", get_ip())
+        print("Display URL:", f"https://localhost:{port}/display", f"  https://{get_ip()}:{port}/display")
+    else:
+        print("Server address:", host)
+        print("Display URL:", f"  https://{host}:{port}/display")
     print("Client URL:", f"https://{host}:{port}/")
 
     handler = functools.partial(process_request, Path(basedir).expanduser())
@@ -159,8 +163,7 @@ def main():
         '--host',
         metavar='HOST',
         type=str,
-        # default="0.0.0.0",
-        default=get_ip(),
+        default="0.0.0.0",
         help="Host address to listen on"
     )
 
