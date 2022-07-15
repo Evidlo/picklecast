@@ -5,28 +5,36 @@
     <script src="webrtc.js"></script>
     <style>
       body {
-        margin: 0;
-        font-family: Helvetica, sans-serif;
-        line-height: 2;
-      }
-      #displayGUI, #remoteVideo {
-        position: fixed;
-        top: 0;
-        bottom: 0;      
-        left: 0;
-        right: 0;
-        background: url(background.jpg) no-repeat center center fixed; 
-        -webkit-background-size: cover;
-        -moz-background-size: cover;
-        -o-background-size: cover;
-        background-size: cover;
+          margin: 0;
+          font-family: Helvetica, sans-serif;
+          line-height: 2;
+          background-color: #111111;
+          display: flex;
+          align-items: center;
+          position: fixed;
+          top: 0;
+          bottom: 0;      
+          left: 0;
+          right: 0;
       }
       #displayGUI {
+          width: 100%;
+          height: 100%;
+          /* fill screen */
+          background: url(background.jpg) no-repeat center center fixed; 
+          -webkit-background-size: cover;
+          -moz-background-size: cover;
+          -o-background-size: cover;
+          background-size: cover;
           display: flex;
+          font-size: 15pt;
           /* display: grid; */
           /* grid-template-columns: 1fr 1fr; */
-          grid-template-areas: "empty instructions";
-          font-size: 15pt;
+          /* grid-template-areas: "empty instructions"; */
+      }
+      #remoteVideo {
+          width: 100%;
+          margin: auto;
       }
       #displayMessage, #displayVersion {
           margin: auto;
@@ -57,7 +65,7 @@
           <li>Click "Start" and share your screen.
         </ol>
       </div>
-      <span id="displayVersion">VERSION_INFO</span>
+      <span><a href="https://github.com/evidlo/picklecast" id="displayVersion">VERSION_INFO</a></span>
     </div>
     <video id="remoteVideo" autoPlay style="display:none;"></video>
 
