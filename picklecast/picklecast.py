@@ -118,10 +118,11 @@ def run(*, port, host, basedir, certificate, **_):
     if host == '0.0.0.0':
         print("Server address:", get_ip())
         print("Display URL:", f"https://localhost:{port}/display", f"  https://{get_ip()}:{port}/display")
+        print("Client URL:", f"https://{get_ip()}:{port}/")
     else:
         print("Server address:", host)
         print("Display URL:", f"  https://{host}:{port}/display")
-    print("Client URL:", f"https://{host}:{port}/")
+        print("Client URL:", f"https://{host}:{port}/")
 
     handler = functools.partial(process_request, Path(basedir).expanduser())
 
