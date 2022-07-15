@@ -64,7 +64,6 @@ function gotMessageFromServer(message) {
 
   var signal = JSON.parse(message.data);
   // if message is from backend server
-  console.log(signal)
   if (signal.sender == "server") {
     displayIPs.forEach(
       function(el, ind, arr) {
