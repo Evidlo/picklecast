@@ -1,10 +1,12 @@
 # picklecast - Simple Screen Cast Receiver
 
-Screen share from a web-browser to a RaspberryPi or display computer connected to a projector or TV.
+Screen share to a RaspberryPi or display computer connected to a projector or TV.
 
 ![](screenshot.png)
 
 ## Quickstart
+
+Install and start the server on the display computer or RPi:
 
     $ pip install picklecast
     $ picklecast
@@ -12,7 +14,7 @@ Screen share from a web-browser to a RaspberryPi or display computer connected t
     Display URL: http://localhost:8443/display   http://192.168.1.100:8443/display
     Client URL: http://192.168.1.100:8443/
     
-Then connect to the display URL from display computer, and the client URL from your personal device.
+Then open the display URL in a web-browser on the display computer.  You can now share your screen from a personal device by visiting the client URL.
     
 Optionally install a systemd service (Linux)
 
@@ -25,3 +27,7 @@ Optionally install a systemd service (Linux)
 Picklecast is just a Python program that serves HTML and relays handshake messages between two browsers.  The streaming and displaying is handled in Javascript in the display/client browsers using the WebRTC api.
 
 ![](architecture.svg)
+
+## Caveats
+
+- Audio sharing only supported when sharing from Chrome on Windows ([bugzilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1541425)).
