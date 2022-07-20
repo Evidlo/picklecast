@@ -1,0 +1,13 @@
+[Unit]
+Description=Picklecast screenshare receiver
+
+[Service]
+# enable so python printed messages appear
+Environment="PYTHONUNBUFFERED=1"
+# path to picklecast
+ExecStart={picklecast_path}
+# restart if program crashes
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
