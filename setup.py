@@ -12,7 +12,7 @@ setup(
     # some basic project information
     name="picklecast",
     version=version["__version__"],
-    license="GPL3",
+    license="MIT",
     description="Example python project",
     long_description=README,
     author="Evan Widloski",
