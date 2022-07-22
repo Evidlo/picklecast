@@ -161,6 +161,15 @@ def main():
     install_parser.set_defaults(func=install_service)
 
     parser.add_argument(
+        '--debug',
+        action='store_true',
+        default=False,
+        help="enable debugging"
+    )
+
+    parser.add_argument('-v', '--version', action='version', version=__version__, help="show version information")
+
+    parser.add_argument(
         '--host',
         metavar='HOST',
         type=str,
@@ -193,6 +202,10 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.debug:
+        print('Debugging enabled...')
+        log.setLevel(logging.DEBUG)
 
     try:
         args.func(**vars(args))
