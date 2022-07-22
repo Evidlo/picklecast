@@ -19,7 +19,8 @@ pypi: dist
 .PHONY: deb
 deb: dist
 	py2dsc dist/picklecast-$(version).tar.gz
-	cd deb_dist/picklecast-$(version)
+	cd deb_dist/picklecast-$(version)/
+	cp ../../debian_copyright ./debian/copyright
 	dpkg-buildpackage -rfakeroot -uc -us
 	cd ../..
 
