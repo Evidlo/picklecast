@@ -14,3 +14,15 @@ dist:
 .PHONY: pypi
 pypi: dist
 	twine upload dist/picklecast-$(version).tar.gz
+
+# build debian source package in deb_dist/python3-picklecast_X.X.X-X._all.deb
+.PHONY: deb
+deb: dist
+	py2dsc dist/picklecast-$(version).tar.gz
+	cd deb_dist/picklecast-$(version)
+	dpkg-buildpackage -rfakeroot -uc -us
+	cd ../..
+
+.PHONY:
+clean:
+	rm dist deb_dist -rf
