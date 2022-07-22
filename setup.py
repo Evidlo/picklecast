@@ -16,7 +16,7 @@ setup(
     description="Example python project",
     long_description=README,
     author="Evan Widloski",
-    author_email="evan_ex@widloski.com",
+    author_email="evan_github@widloski.com",
     url="https://github.com/evidlo/picklecast",
     # your project's pip dependencies
     install_requires=[
