@@ -16,9 +16,9 @@ Install and start the server on the display computer or RPi:
     
 Then open the display URL in a web-browser on the display computer.  You can now share your screen from a personal device by visiting the client URL.
     
-Optionally install a systemd service (Linux)
+Optionally install as a user service on Linux to keep it running the background:
 
-    picklecast install_service ~/.config/systemd/user
+    picklecast install_service
     systemctl --user daemon-reload
     systemctl --user start picklecast
 
@@ -31,3 +31,5 @@ Picklecast is just a Python program that serves HTML and relays handshake messag
 ## Caveats
 
 - Audio sharing only supported when sharing from Chrome on Windows ([bugzilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1541425)).
+- Currently there can be only one browser open to the display URL at a time
+- Only desktop browsers are supported, as mobile browsers don't support [getDisplayMedia](https://caniuse.com/?search=getDisplayMedia)
