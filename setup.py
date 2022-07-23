@@ -13,7 +13,7 @@ setup(
     name="picklecast",
     version=version["__version__"],
     license="MIT",
-    description="Example python project",
+    description="Share your screen to a projector via web-browser",
     long_description=README,
     author="Evan Widloski",
     author_email="evan_github@widloski.com",
