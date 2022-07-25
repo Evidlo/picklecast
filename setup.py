@@ -1,4 +1,9 @@
 from setuptools import find_packages, setup
+# try to import py2exe for Windows packaging
+try:
+    import py2exe
+except ImportError:
+    pass
 
 with open("README.md") as f:
     README = f.read()
