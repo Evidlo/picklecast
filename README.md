@@ -26,7 +26,7 @@ Optionally install as a user service on Linux to keep it running the background:
 
 Picklecast is just a Python program that serves HTML and relays handshake messages between two browsers.  The streaming and displaying is handled in Javascript in the display/client browsers using the WebRTC api.
 
-![](architecture.svg)
+<img src="architecture.svg" width="500px"/>
 
 ## Caveats
 
