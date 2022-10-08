@@ -22,7 +22,8 @@ function pageReady() {
   displayIPs = Array.from(document.getElementsByClassName("displayIP"));
   displayVersion = document.getElementById("displayVersion")
 
-  serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
+  // serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
+  serverConnection = new WebSocket(window.location.href.replace(/^https:\/\//, "wss://").replace(/display$/, ""));
   serverConnection.onmessage = gotMessageFromServer;
 }
 
