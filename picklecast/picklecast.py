@@ -110,7 +110,7 @@ async def on_connect(ws):
                 continue
 
 
-def run(*, port, host, basedir, certificate, **_):
+def run(*, port, host, base_dir, certificate, **_):
     """Run pickle cast"""
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     ssl_context.load_cert_chain(Path(certificate).expanduser())
@@ -124,7 +124,7 @@ def run(*, port, host, basedir, certificate, **_):
         print("Display URL:", f"  https://{host}:{port}/display")
         print("Client URL:", f"https://{host}:{port}/")
 
-    handler = functools.partial(process_request, Path(basedir).expanduser())
+    handler = functools.partial(process_request, Path(base_dir).expanduser())
 
     async def asyncio_run(host, port):
         async with websockets.serve(on_connect, host, port, ssl=ssl_context, process_request=handler):
@@ -132,12 +132,11 @@ def run(*, port, host, basedir, certificate, **_):
 
     asyncio.run(asyncio_run(host, port))
 
-def install_service(**_):
+def install_service(*, base_dir, **_):
     """Install systemd service to ~/.config/systemd/user"""
 
     service = base_dir.joinpath("picklecast.service")
     dest = Path.home().joinpath(".config/systemd/user").joinpath(service.name)
-    print("Installing service to {}".format(dest))
 
     picklecast_path = Path(sysconfig.get_path('scripts')).joinpath('picklecast')
     assert picklecast_path.exists(), "Couldn't find picklecast install location"
@@ -145,6 +144,10 @@ def install_service(**_):
     # insert picklecast path into template
     service_text = service.read_text().format(picklecast_path=picklecast_path)
     dest.write_text(service_text)
+    print("Installed service to {}".format(dest))
+    print("Enable the service by running:")
+    print("    systemctl --user daemon-reload")
+    print("    systemctl --user start picklecast")
 
 def main():
     parser = argparse.ArgumentParser(description="Screen share receiver")
@@ -186,7 +189,7 @@ def main():
     )
 
     parser.add_argument(
-        '--basedir',
+        '--base_dir',
         metavar='DIR',
         type=str,
         default=Path(__file__).parent,

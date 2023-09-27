@@ -27,11 +27,17 @@ function pageReady() {
   serverConnection.onmessage = gotMessageFromServer;
 }
 
+// called when client starts sharing screen
 function getUserMediaSuccess(stream) {
   localStream = stream;
   peerConnection.addStream(localStream);
   peerConnection.createOffer().then(createdDescription).catch(errorHandler);
   // localVideo.srcObject = stream;
+  // disconnect webRTC connection when sharing sotps
+  stream.getVideoTracks()[0].onended = function () {
+      console.log("Screenshare ended")
+      peerConnection.close()
+  };
 }
 
 function startScreenshare() {
@@ -56,6 +62,7 @@ function openWebRTCConnection() {
   peerConnection.onicecandidate = gotIceCandidate;
   peerConnection.ontrack = gotRemoteStream;
   peerConnection.onconnectionstatechange = connectionStateChange;
+  peerConnection.oniceconnectionstatechange = connectionStateChange;
 }
 
 // websocket message received from backend
@@ -117,6 +124,7 @@ function gotRemoteStream(event) {
 
 // websocket state change callback
 function connectionStateChange(event) {
+    console.log(event);
     switch(peerConnection.connectionState) {
     case "new":
     case "checking":
@@ -130,6 +138,7 @@ function connectionStateChange(event) {
       // show gui, hide video
       // displayGUI.style.display = 'flex';
       // remoteVideo.style.display = 'none';
+      // FIXME: above doesn't work.  just reload the whole page for now
       window.location.reload();
       break;
     case "closed":
@@ -138,9 +147,9 @@ function connectionStateChange(event) {
     case "failed":
       console.log("Error");
       break;
-    // default:
-    //   console.log("Unknown");
-    //   break;
+    default:
+      console.log("Unknown");
+      break;
   }
 }
 
