@@ -33,3 +33,4 @@ Picklecast is just a Python program that serves HTML and relays handshake messag
 - Audio sharing only supported when sharing from Chrome on Windows ([bugzilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1541425)).
 - Currently there can be only one browser open to the display URL at a time
 - Only desktop browsers are supported, as mobile browsers don't support [getDisplayMedia](https://caniuse.com/?search=getDisplayMedia)
+- I've had issues getting the WebRTC APIs working correctly with Chrome on Windows.  Help on this issue would be appreciated.
