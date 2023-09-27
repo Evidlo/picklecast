@@ -137,6 +137,7 @@ def install_service(*, base_dir, **_):
 
     service = base_dir.joinpath("picklecast.service")
     dest = Path.home().joinpath(".config/systemd/user").joinpath(service.name)
+    dest.parent.mkdir(exist_ok=True, parents=True)
 
     picklecast_path = Path(sysconfig.get_path('scripts')).joinpath('picklecast')
     assert picklecast_path.exists(), "Couldn't find picklecast install location"
