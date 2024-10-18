@@ -36,6 +36,7 @@ setup(
             'picklecast/index.html',
             'picklecast/display.html',
             'picklecast/webrtc.js',
+            'picklecast/adapter-latest.js',
             'picklecast/background.jpg',
         ]),
     ],
