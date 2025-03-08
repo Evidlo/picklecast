@@ -12,6 +12,7 @@ import socket
 import sysconfig
 import ssl
 import websockets
+import websockets.legacy.server as server
 
 from .version import __version__
 
@@ -127,7 +128,7 @@ def run(*, port, host, base_dir, certificate, **_):
     handler = functools.partial(process_request, Path(base_dir).expanduser())
 
     async def asyncio_run(host, port):
-        async with websockets.serve(on_connect, host, port, ssl=ssl_context, process_request=handler):
+        async with server.serve(on_connect, host, port, ssl=ssl_context, process_request=handler):
             await asyncio.Future()
 
     asyncio.run(asyncio_run(host, port))
