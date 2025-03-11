@@ -33,6 +33,7 @@ setup(
     data_files=[
         ('', [
             'picklecast/localhost.pem',
+            'picklecast/adapter-latest.js',
             'picklecast/index.html',
             'picklecast/display.html',
             'picklecast/webrtc.js',
