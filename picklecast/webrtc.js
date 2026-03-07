@@ -8,8 +8,8 @@ var displayIP;
 
 var peerConnectionConfig = {
   'iceServers': [
-    {'urls': 'stun:stun.stunprotocol.org:3478'},
     {'urls': 'stun:stun.l.google.com:19302'},
+    {'urls': 'stun:stun.cloudflare.com:3478'},
   ]
 };
 
@@ -73,11 +73,7 @@ function gotMessageFromServer(message) {
   var signal = JSON.parse(message.data);
   // if message is from backend server
   if (signal.sender == "server") {
-    displayIPs.forEach(
-      function(el, ind, arr) {
-        el.textContent = signal.message.address;
-      }
-    )
+    if (displayIPs) displayIPs.forEach(function(el) { el.textContent = signal.message.address; });
     if (displayVersion) displayVersion.textContent = signal.message.version;
     return
   }

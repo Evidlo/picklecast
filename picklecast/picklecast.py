@@ -97,19 +97,22 @@ async def on_connect(ws):
     ))
 
     # broadcast every message received to all clients
-    async for message in ws:
-        for connection in connections:
-            try:
-                if connection.open:
-                    await connection.send(json.dumps(
-                        {
-                            "sender": "client",
-                            "message": json.loads(message)
-                        }
-                    ))
-            except websockets.exceptions.ConnectionClosedError:
-                log.debug("Client disconnected")
-                continue
+    try:
+        async for message in ws:
+            for connection in connections:
+                try:
+                    if connection.open:
+                        await connection.send(json.dumps(
+                            {
+                                "sender": "client",
+                                "message": json.loads(message)
+                            }
+                        ))
+                except websockets.exceptions.ConnectionClosedError:
+                    log.debug("Client disconnected")
+                    continue
+    finally:
+        connections.discard(ws)
 
 
 def run(*, port, host, base_dir, certificate, **_):
