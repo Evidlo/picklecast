@@ -30,7 +30,7 @@ function pageReady() {
 // called when client starts sharing screen
 function getUserMediaSuccess(stream) {
   localStream = stream;
-  peerConnection.addStream(localStream);
+  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
   peerConnection.createOffer().then(createdDescription).catch(errorHandler);
   // localVideo.srcObject = stream;
   // disconnect webRTC connection when sharing sotps
@@ -78,7 +78,7 @@ function gotMessageFromServer(message) {
         el.textContent = signal.message.address;
       }
     )
-    displayVersion.textContent = signal.message.version;
+    if (displayVersion) displayVersion.textContent = signal.message.version;
     return
   }
 

@@ -2,8 +2,8 @@
 <html>
   <head>
     <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
-    <script src="webrtc.js"></script>
     <script src="adapter-latest.js"></script>
+    <script src="webrtc.js"></script>
     <style>
       body {
           margin: 0;
@@ -71,7 +71,7 @@
       </div>
       <span><a href="https://github.com/evidlo/picklecast" id="displayVersion">VERSION_INFO</a></span>
     </div>
-    <video id="remoteVideo" autoPlay style="display:none;"></video>
+    <video id="remoteVideo" autoplay playsinline muted style="display:none;"></video>
 
     <script type="text/javascript">
         pageReady();
