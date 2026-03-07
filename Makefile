@@ -5,11 +5,11 @@
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-version := $(shell python -c "exec(open('picklecast/version.py').read());print(__version__)")
+version := $(shell python -c "from importlib.metadata import version; print(version('picklecast'))")
 
 .PHONY: dist
 dist:
-	python setup.py sdist
+	python -m build --sdist
 
 .PHONY: pypi
 pypi: dist
@@ -24,7 +24,7 @@ deb:
 		--command-packages=stdeb.command sdist_dsc \
 		--sign-results --sign-key debian \
 		--copyright-file debian_copyright \
-		--build-depends dh-python
+		--build-depends dh-python  # TODO: migrate stdeb to pyproject.toml
 
 	# also build binary package for this distribution
 	# cd deb_dist/picklecast-$(version)/

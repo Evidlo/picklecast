@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "picklecast"
+version = "1.0.4"
+license = "MIT"
+description = "Share your screen to a projector via web-browser"
+readme = "README.md"
+authors = [
+    {name = "Evan Widloski", email = "evan_github@widloski.com"},
+]
+dependencies = ["websockets"]
+
+[project.urls]
+Homepage = "https://github.com/evidlo/picklecast"
+
+[project.scripts]
+picklecast = "picklecast.picklecast:main"
+
+[tool.setuptools.packages.find]
+include = ["picklecast"]
+
+[tool.setuptools.package-data]
+picklecast = [
+    "localhost.pem",
+    "adapter-latest.js",
+    "index.html",
+    "display.html",
+    "webrtc.js",
+    "background.jpg",
+]

@@ -14,7 +14,8 @@ import ssl
 import websockets
 import websockets.legacy.server as server
 
-from .version import __version__
+from importlib.metadata import version
+__version__ = version("picklecast")
 
 log = logging.getLogger('picklecast')
 logging.basicConfig()
