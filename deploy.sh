@@ -1,2 +1,2 @@
 #!/bin/bash
-ghp-import -b deploy picklecast/ -p
+ghp-import -f -o -p -b deploy picklecast/
