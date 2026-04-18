@@ -34,7 +34,7 @@
             }
             var constraints = type === 'camera'
                 ? {video: true, audio: false}
-                : {video: {cursor: 'always'}, audio: false};
+                : {video: {cursor: 'always'}, audio: true};
             var getMedia = type === 'camera'
                 ? navigator.mediaDevices.getUserMedia(constraints)
                 : navigator.mediaDevices.getDisplayMedia(constraints);
