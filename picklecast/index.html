@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/p2pt@1/dist/p2pt.iife.js"></script>
@@ -18,6 +19,25 @@
         <div>
             <button class="btn" onclick="share('screen')">Share Screen</button>
             <button class="btn" onclick="share('camera')">Share Camera</button>
+            <button class="btn" onclick="showVideoPrompt()">Share Video</button>
+        </div>
+        <div id="videoPrompt" style="display:none; margin-top: 1rem;">
+            <input type="text" id="videoURL" class="url-input" placeholder="YouTube or video URL">
+            <button class="btn" onclick="submitVideoURL()">Cast</button>
+        </div>
+        <div id="controls" style="display:none;">
+            <div class="control-row">
+                <button class="btn btn-sm" id="playPauseBtn" onclick="sendControl({action: 'toggle'})">⏯</button>
+                <button class="btn btn-sm" onclick="stopCast()">⏹</button>
+            </div>
+            <div class="control-row">
+                <input type="range" id="seekBar" class="seek-bar" min="0" max="100" value="0">
+                <span id="timeDisplay" class="time-display">0:00 / 0:00</span>
+            </div>
+            <div class="control-row">
+                <span class="volume-label">Vol</span>
+                <input type="range" id="volumeBar" class="volume-bar" min="0" max="100" value="100">
+            </div>
         </div>
         <p><small>or <a href="display.html">open display server</a></small></p>
         <div class="status" id="status"></div>
@@ -44,6 +64,59 @@
                 .then(function(stream) { initClient(code, stream); })
                 .catch(function(err) { setStatus('Could not access media: ' + err.message); });
         }
+
+        function showVideoPrompt() {
+            var code = getCode();
+            if (code.length < 4) {
+                setStatus('Enter the full 4-character code first.');
+                return;
+            }
+            // ensure p2pt connection exists
+            if (!clientState.p2pt || clientState.code !== code) {
+                initClient(code, null);
+            }
+            document.getElementById('videoPrompt').style.display = 'block';
+            document.getElementById('videoURL').focus();
+        }
+
+        function submitVideoURL() {
+            var url = document.getElementById('videoURL').value.trim();
+            if (!url) return;
+            // wait for peer connection if not ready yet
+            if (!clientState.peer) {
+                setStatus('Connecting to display...');
+                var check = setInterval(function() {
+                    if (clientState.peer) {
+                        clearInterval(check);
+                        sendCast(url);
+                        document.getElementById('videoPrompt').style.display = 'none';
+                    }
+                }, 200);
+                return;
+            }
+            sendCast(url);
+            document.getElementById('videoPrompt').style.display = 'none';
+        }
+
+        document.getElementById('videoURL').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitVideoURL();
+        });
+
+        // seek bar interaction
+        var seekBar = document.getElementById('seekBar');
+        seekBar.addEventListener('mousedown', function() { seekDragging = true; });
+        seekBar.addEventListener('touchstart', function() { seekDragging = true; });
+        seekBar.addEventListener('input', function() {
+            sendControl({action: 'seek', time: parseFloat(seekBar.value)});
+        });
+        seekBar.addEventListener('mouseup', function() { seekDragging = false; });
+        seekBar.addEventListener('touchend', function() { seekDragging = false; });
+
+        // volume bar
+        document.getElementById('volumeBar').addEventListener('input', function() {
+            sendControl({action: 'volume', value: this.value / 100});
+        });
+
     </script>
 </body>
 </html>

@@ -86,8 +86,59 @@ small a:hover { color: #4a9eff; }
 .credit a { color: #555; }
 .credit a:hover { color: #4a9eff; }
 
-#remoteVideo {
+#remoteVideo, #castVideo {
     max-width: 100%;
     max-height: 100vh;
     display: none;
 }
+
+#playbackBlockedOverlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+#castContainer {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* client URL input */
+.url-input {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    background: #222;
+    border: 2px solid #444;
+    border-radius: 0.5rem;
+    color: #fff;
+    width: 20rem;
+    max-width: 80vw;
+}
+.url-input:focus { border-color: #4a9eff; outline: none; }
+
+/* transport controls */
+#controls { margin-top: 1rem; }
+.control-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+.btn-sm { padding: 0.4rem 1rem; font-size: 2.4rem; line-height: 1; }
+.seek-bar { width: 14rem; max-width: 60vw; }
+.volume-bar { width: 6rem; }
+.volume-label { color: #888; font-size: 0.85rem; }
+.time-display { color: #aaa; font-size: 0.85rem; font-family: monospace; white-space: nowrap; }
