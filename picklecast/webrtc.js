@@ -250,8 +250,7 @@ function startDisplayCast(peer, p2pt, cast) {
         div.id = 'ytplayer';
         container.appendChild(div);
 
-        displayPlayer = {type: 'youtube', player: null};
-        // YouTube iframe API creates player asynchronously
+        displayPlayer = {type: 'youtube', player: null, error: false};
         displayPlayer.player = new YT.Player('ytplayer', {
             videoId: cast.id,
             width: '100%',
@@ -260,15 +259,15 @@ function startDisplayCast(peer, p2pt, cast) {
             events: {
                 onReady: function() {
                     startDisplaySync(peer, p2pt);
-                    // check if autoplay was blocked
+                    // detect autoplay blocked (not video error)
                     setTimeout(function() {
-                        if (displayPlayer && displayPlayer.player &&
-                            displayPlayer.player.getPlayerState &&
-                            displayPlayer.player.getPlayerState() !== YT.PlayerState.PLAYING) {
+                        if (!displayPlayer || displayPlayer.error) return;
+                        var state = displayPlayer.player.getPlayerState();
+                        if (state === -1 || state === 5)
                             showPlaybackBlockedOverlay(null, displayPlayer.player);
-                        }
-                    }, 1000);
-                }
+                    }, 1500);
+                },
+                onError: function() { if (displayPlayer) displayPlayer.error = true; }
             }
         });
     } else if (cast.type === 'video') {
