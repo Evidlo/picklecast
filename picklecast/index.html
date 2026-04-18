@@ -27,7 +27,9 @@
         </div>
         <div id="controls" style="display:none;">
             <div class="control-row">
+                <button class="btn btn-sm" onclick="sendControl({action: 'prev'})">⏮</button>
                 <button class="btn btn-sm" id="playPauseBtn" onclick="sendControl({action: 'toggle'})">⏯</button>
+                <button class="btn btn-sm" onclick="sendControl({action: 'next'})">⏭</button>
                 <button class="btn btn-sm" onclick="stopCast()">⏹</button>
             </div>
             <div class="control-row">

@@ -227,11 +227,18 @@ function initClient(code, stream) {
 // --- URL casting ---
 
 function parseVideoURL(url) {
-    // youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID
     var yt = url.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    if (yt) return {type: 'youtube', id: yt[1]};
-    // anything else treated as direct video URL
-    return {type: 'video', url: url};
+    if (!yt) return {type: 'video', url: url};
+    // pass all query params through so playlist, index, start time etc. are preserved
+    var params = {};
+    var search = url.split('?')[1];
+    if (search) search.split('&').forEach(function(p) {
+        var kv = p.split('=');
+        if (kv[0] !== 'v') params[kv[0]] = decodeURIComponent(kv[1] || '');
+    });
+    // YouTube API requires listType alongside list for playlist controls
+    if (params.list) params.listType = 'playlist';
+    return {type: 'youtube', id: yt[1], params: params};
 }
 
 // display-side: current media player abstraction
@@ -255,9 +262,12 @@ function startDisplayCast(peer, p2pt, cast) {
             videoId: cast.id,
             width: '100%',
             height: '100%',
-            playerVars: {autoplay: 1, controls: 0, modestbranding: 1, rel: 0},
+            playerVars: Object.assign({autoplay: 1, controls: 0, modestbranding: 1, rel: 0}, cast.params || {}),
             events: {
                 onReady: function() {
+                    // explicitly load playlist so nextVideo/previousVideo work
+                    if (cast.params && cast.params.list)
+                        displayPlayer.player.loadPlaylist({list: cast.params.list, listType: 'playlist'});
                     startDisplaySync(peer, p2pt);
                     // detect autoplay blocked (not video error)
                     setTimeout(function() {
@@ -326,10 +336,12 @@ function getDisplayPlaybackState() {
 }
 
 function handleDisplayControl(control) {
+    console.log('handleDisplayControl', control, 'displayPlayer:', displayPlayer);
     if (!displayPlayer) return;
 
     if (displayPlayer.type === 'youtube' && displayPlayer.player) {
         var p = displayPlayer.player;
+        console.log('YT player state:', p.getPlayerState && p.getPlayerState(), 'playlist:', p.getPlaylist && p.getPlaylist(), 'playlistIndex:', p.getPlaylistIndex && p.getPlaylistIndex(), 'nextVideo:', typeof p.nextVideo);
         if (control.action === 'toggle') {
             // toggle based on current state
             if (p.getPlayerState() === YT.PlayerState.PLAYING) p.pauseVideo();
@@ -339,6 +351,9 @@ function handleDisplayControl(control) {
         else if (control.action === 'pause') p.pauseVideo();
         else if (control.action === 'seek') p.seekTo(control.time, true);
         else if (control.action === 'volume') p.setVolume(control.value * 100);
+        // playlist navigation
+        else if (control.action === 'next') p.nextVideo();
+        else if (control.action === 'prev') p.previousVideo();
     } else if (displayPlayer.type === 'video' && displayPlayer.el) {
         var v = displayPlayer.el;
         if (control.action === 'toggle') {
@@ -376,6 +391,7 @@ var seekDragging = false;
 function sendCast(url) {
     if (!clientState.peer || !clientState.p2pt) return;
     var cast = parseVideoURL(url);
+    console.log('sendCast', cast);
     clientState.p2pt.send(clientState.peer, JSON.stringify({cast: cast})).catch(console.error);
     castActive = true;
     showControls(true);
@@ -383,6 +399,7 @@ function sendCast(url) {
 }
 
 function sendControl(control) {
+    console.log('sendControl', control, 'peer:', !!clientState.peer);
     if (!clientState.peer || !clientState.p2pt) return;
     clientState.p2pt.send(clientState.peer, JSON.stringify({control: control})).catch(function(){});
 }
