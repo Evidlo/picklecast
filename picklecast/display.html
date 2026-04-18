@@ -1,80 +1,39 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
-    <script src="adapter-latest.js"></script>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/p2pt@1/dist/p2pt.iife.js"></script>
     <script src="webrtc.js"></script>
-    <style>
-      body {
-          margin: 0;
-          font-family: Helvetica, sans-serif;
-          line-height: 2;
-          background-color: #111111;
-          display: flex;
-          align-items: center;
-          position: fixed;
-          top: 0;
-          bottom: 0;      
-          left: 0;
-          right: 0;
-      }
-      #displayGUI {
-          width: 100%;
-          height: 100%;
-          /* fill screen */
-          background: url(background.jpg) no-repeat center center fixed; 
-          -webkit-background-size: cover;
-          -moz-background-size: cover;
-          -o-background-size: cover;
-          background-size: cover;
-          display: flex;
-          font-size: 15pt;
-          /* display: grid; */
-          /* grid-template-columns: 1fr 1fr; */
-          /* grid-template-areas: "empty instructions"; */
-      }
-      #remoteVideo {
-          height:auto;
-          width:auto;
-          max-height: 100%;
-          max-width: 100%;
-          margin: 0 auto;
-      }
-      #displayMessage, #displayVersion {
-          margin: auto;
-          grid-area: instructions;
-          background-color: gray;
-          color: white;
-          padding: 2ch;
-          opacity: 0.9;
-          border-radius: 1ch;
-      }
-      #displayVersion {
-          position: absolute;
-          border-radius: 1ch 0 0 0;
-          bottom: 0;
-          right: 0;
-      }
-
-    </style>
-  </head>
-
-  <body>
-    <div id="displayGUI">
-      <div id="displayMessage">
-        <span class="displayIP" style="font-size: 30pt;">DISPLAY_IP</span>
-        <ol>
-          <li>Browse to <span class="displayIP">DISPLAY_IP</span></li>
-          <li>Accept the TLS Certificate (Advanced > Proceed to Site)
-          <li>Click "Start" and share your screen.
-        </ol>
-      </div>
-      <span><a href="https://github.com/evidlo/picklecast" id="displayVersion">VERSION_INFO</a></span>
+</head>
+<body>
+    <div class="container" id="displayGUI">
+        <h2>To connect, open <span class="url" id="displayURL"></span></h2>
+        <h2>Enter this code</h2>
+        <div class="code-boxes">
+            <div class="code-box code-char"></div>
+            <div class="code-box code-char"></div>
+            <div class="code-box code-char"></div>
+            <div class="code-box code-char"></div>
+        </div>
+        <div class="status" id="status"></div>
+        <p class="credit" id="credit"></p>
     </div>
-    <video id="remoteVideo" autoplay playsinline muted style="display:none;"></video>
+    <video id="remoteVideo" autoplay playsinline muted></video>
 
-    <script type="text/javascript">
-        pageReady();
+    <script>
+        var code = generateCode();
+        var chars = document.querySelectorAll('.code-char');
+        for (var i = 0; i < 4; i++) chars[i].textContent = code[i];
+
+        var loc = window.location;
+        var url = loc.host + loc.pathname.replace(/display\.html$/, '');
+        document.getElementById('displayURL').textContent = url;
+
+        document.getElementById('credit').innerHTML =
+            'Evan Widloski (<a href="https://github.com/evidlo/picklecast">Picklecast v' + VERSION + '</a>)';
+
+        initDisplay(code);
     </script>
-  </body>
+</body>
 </html>

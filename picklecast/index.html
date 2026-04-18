@@ -1,23 +1,49 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/p2pt@1/dist/p2pt.iife.js"></script>
     <script src="webrtc.js"></script>
-    <script src="adapter-latest.js"></script>
-    <style>
-      html {
-          margin: 0;
-      }
-      </style>
-  </head>
+</head>
+<body>
+    <div class="container">
+        <h2>Enter code you see on screen:</h2>
+        <div class="code-boxes">
+            <input class="code-box" maxlength="1" autocomplete="off">
+            <input class="code-box" maxlength="1" autocomplete="off">
+            <input class="code-box" maxlength="1" autocomplete="off">
+            <input class="code-box" maxlength="1" autocomplete="off">
+        </div>
+        <div>
+            <button class="btn" onclick="share('screen')">Share Screen</button>
+            <button class="btn" onclick="share('camera')">Share Camera</button>
+        </div>
+        <p><small>or <a href="display.html">open display server</a></small></p>
+        <div class="status" id="status"></div>
+    </div>
 
-  <body>
-    <input type="button" id="start" onclick="startScreenshare()" value="Start Screen Share"></input>
+    <script>
+        setupCodeInputs();
 
-    <br />
+        function share(type) {
+            var code = getCode();
+            if (code.length < 4) {
+                setStatus('Enter the full 4-character code first.');
+                return;
+            }
+            var constraints = type === 'camera'
+                ? {video: true, audio: false}
+                : {video: {cursor: 'always'}, audio: false};
+            var getMedia = type === 'camera'
+                ? navigator.mediaDevices.getUserMedia(constraints)
+                : navigator.mediaDevices.getDisplayMedia(constraints);
 
-    <script type="text/javascript">
-        pageReady();
+            setStatus('Requesting media...');
+            getMedia
+                .then(function(stream) { initClient(code, stream); })
+                .catch(function(err) { setStatus('Could not access media: ' + err.message); });
+        }
     </script>
-  </body>
+</body>
 </html>

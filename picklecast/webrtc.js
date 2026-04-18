@@ -1,164 +1,234 @@
-// var localVideo;
-var localStream;
-var remoteVideo;
-var peerConnection;
-var uuid;
-var serverConnection;
-var displayIP;
+var VERSION = '0.5.0';
 
-var peerConnectionConfig = {
-  'iceServers': [
-    {'urls': 'stun:stun.l.google.com:19302'},
-    {'urls': 'stun:stun.cloudflare.com:3478'},
-  ]
-};
+var TRACKERS = [
+    'wss://tracker.openwebtorrent.com',
+    'wss://tracker.webtorrent.dev',
+];
 
-function pageReady() {
-  uuid = createUUID();
+var ICE_SERVERS = [
+    {urls: 'stun:stun.l.google.com:19302'},
+    {urls: 'stun:stun.cloudflare.com:3478'},
+];
 
-  // localVideo = document.getElementById('localVideo');
-  remoteVideo = document.getElementById('remoteVideo');
-  displayGUI = document.getElementById('displayGUI');
-  displayIPs = Array.from(document.getElementsByClassName("displayIP"));
-  displayVersion = document.getElementById("displayVersion")
+var CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-  // serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
-  serverConnection = new WebSocket(window.location.href.replace(/^https:\/\//, "wss://").replace(/display$/, ""));
-  serverConnection.onmessage = gotMessageFromServer;
+function generateCode() {
+    var code = '';
+    for (var i = 0; i < 4; i++)
+        code += CHARS[Math.floor(Math.random() * CHARS.length)];
+    return code;
 }
 
-// called when client starts sharing screen
-function getUserMediaSuccess(stream) {
-  localStream = stream;
-  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-  peerConnection.createOffer().then(createdDescription).catch(errorHandler);
-  // localVideo.srcObject = stream;
-  // disconnect webRTC connection when sharing sotps
-  stream.getVideoTracks()[0].onended = function () {
-      console.log("Screenshare ended")
-      peerConnection.close()
-  };
-}
+function initDisplay(code) {
+    var p2pt = new P2PT(TRACKERS, 'picklecast-' + code);
+    var pc = null;
+    var pendingCandidates = [];
 
-function startScreenshare() {
-  peerConnection = new RTCPeerConnection(peerConnectionConfig);
-  peerConnection.onicecandidate = gotIceCandidate;
-
-  var constraints = {
-    video: {
-      cursor: "always"
-    },
-    audio: false
-  };
-  if(navigator.mediaDevices.getDisplayMedia) {
-    navigator.mediaDevices.getDisplayMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
-  } else {
-    alert('Your browser does not support getDisplayMedia API');
-  }
-}
-
-function openWebRTCConnection() {
-  peerConnection = new RTCPeerConnection(peerConnectionConfig);
-  peerConnection.onicecandidate = gotIceCandidate;
-  peerConnection.ontrack = gotRemoteStream;
-  peerConnection.onconnectionstatechange = connectionStateChange;
-  peerConnection.oniceconnectionstatechange = connectionStateChange;
-}
-
-// websocket message received from backend
-function gotMessageFromServer(message) {
-  if(!peerConnection) openWebRTCConnection();
-
-
-  var signal = JSON.parse(message.data);
-  // if message is from backend server
-  if (signal.sender == "server") {
-    if (displayIPs) displayIPs.forEach(function(el) { el.textContent = signal.message.address; });
-    if (displayVersion) displayVersion.textContent = signal.message.version;
-    return
-  }
-
-  // if message if from another browser
-  else if (signal.sender == "client") {
-    // Ignore messages from ourself
-    if(signal.message.uuid == uuid) return;
-
-    if(signal.message.sdp) {
-      peerConnection.setRemoteDescription(new RTCSessionDescription(signal.message.sdp)).then(function() {
-        // Only create answers in response to offers
-        if(signal.message.sdp.type == 'offer') {
-          peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
-        }
-      }).catch(errorHandler);
-    } else if(signal.message.ice) {
-      peerConnection.addIceCandidate(new RTCIceCandidate(signal.message.ice)).catch(errorHandler);
+    function resetDisplay() {
+        if (pc) { pc.close(); pc = null; }
+        pendingCandidates = [];
+        // show code screen, hide video
+        document.getElementById('displayGUI').style.display = '';
+        var video = document.getElementById('remoteVideo');
+        video.style.display = 'none';
+        video.srcObject = null;
+        setStatus('Waiting for connection...');
     }
-  }
 
+    p2pt.on('msg', function(peer, msg) {
+        var signal = JSON.parse(msg);
+
+        // client stopped sharing
+        if (signal.stop) {
+            resetDisplay();
+            return;
+        }
+
+        if (signal.sdp) {
+            // ignore duplicate offers from multiple trackers
+            if (pc) return;
+            pc = new RTCPeerConnection({iceServers: ICE_SERVERS});
+            pc.ontrack = function(event) {
+                document.getElementById('displayGUI').style.display = 'none';
+                var video = document.getElementById('remoteVideo');
+                video.style.display = 'block';
+                video.srcObject = event.streams[0];
+            };
+            pc.onicecandidate = function(event) {
+                if (event.candidate)
+                    p2pt.send(peer, JSON.stringify({ice: event.candidate}));
+            };
+            // client disconnected unexpectedly
+            pc.onconnectionstatechange = function() {
+                if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed')
+                    resetDisplay();
+            };
+            pc.oniceconnectionstatechange = function() {
+                if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed')
+                    resetDisplay();
+            };
+
+            pc.setRemoteDescription(new RTCSessionDescription(signal.sdp))
+                .then(function() {
+                    pendingCandidates.forEach(function(c) {
+                        pc.addIceCandidate(new RTCIceCandidate(c));
+                    });
+                    pendingCandidates = [];
+                    return pc.createAnswer();
+                })
+                .then(function(answer) {
+                    pc.setLocalDescription(answer);
+                    p2pt.send(peer, JSON.stringify({sdp: answer}));
+                })
+                .catch(console.error);
+        } else if (signal.ice) {
+            if (pc && pc.remoteDescription)
+                pc.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(console.error);
+            else
+                pendingCandidates.push(signal.ice);
+        }
+    });
+
+    // client closed tab/lost connection
+    p2pt.on('peerclose', function() {
+        if (pc) resetDisplay();
+    });
+
+    p2pt.on('trackerconnect', function() {
+        setStatus('Waiting for connection...');
+    });
+
+    p2pt.start();
+    return p2pt;
 }
 
-function gotIceCandidate(event) {
-  if(event.candidate != null) {
-    serverConnection.send(JSON.stringify({'ice': event.candidate, 'uuid': uuid}));
-  }
+var clientState = {p2pt: null, pc: null, stream: null, peer: null, code: null};
+
+function stopSharing(notify) {
+    // tell display we stopped
+    if (notify && clientState.peer && clientState.p2pt)
+        clientState.p2pt.send(clientState.peer, JSON.stringify({stop: true})).catch(function(){});
+    // tear down media connection but keep p2pt alive
+    if (clientState.pc) { clientState.pc.close(); clientState.pc = null; }
+    if (clientState.stream) {
+        clientState.stream.getTracks().forEach(function(t) { t.stop(); });
+        clientState.stream = null;
+    }
+    setStatus('Sharing stopped.');
 }
 
-function createdDescription(description) {
-  peerConnection.setLocalDescription(description).then(function() {
-    serverConnection.send(JSON.stringify({'sdp': peerConnection.localDescription, 'uuid': uuid}));
-  }).catch(errorHandler);
+function startSharing(stream) {
+    clientState.stream = stream;
+    clientState.pc = new RTCPeerConnection({iceServers: ICE_SERVERS});
+    var pc = clientState.pc;
+    var peer = clientState.peer;
+
+    stream.getTracks().forEach(function(track) { pc.addTrack(track, stream); });
+
+    // user clicked "Stop sharing" in browser chrome
+    stream.getTracks().forEach(function(track) {
+        track.addEventListener('ended', function() { stopSharing(true); });
+    });
+
+    pc.onicecandidate = function(event) {
+        if (event.candidate)
+            clientState.p2pt.send(peer, JSON.stringify({ice: event.candidate}));
+    };
+    pc.onconnectionstatechange = function() {
+        if (pc.connectionState === 'connected')
+            setStatus('Connected!');
+        // display went away
+        if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed')
+            stopSharing(false);
+    };
+
+    pc.createOffer()
+        .then(function(offer) {
+            pc.setLocalDescription(offer);
+            clientState.p2pt.send(peer, JSON.stringify({sdp: offer}));
+        })
+        .catch(console.error);
 }
 
-function gotRemoteStream(event) {
-  console.log('Got remote stream');
-  // hide gui, show video
-  displayGUI.style.display = 'none';
-  remoteVideo.style.display = 'block';
+function initClient(code, stream) {
+    // same code and peer already connected — just start a new media session
+    if (clientState.p2pt && clientState.code === code && clientState.peer) {
+        stopSharing(false);
+        startSharing(stream);
+        return;
+    }
 
-  remoteVideo.srcObject = event.streams[0];
+    // different code or first time — tear down everything and reconnect
+    if (clientState.p2pt) clientState.p2pt.destroy();
+    clientState = {p2pt: null, pc: null, stream: null, peer: null, code: code};
+
+    var p2pt = new P2PT(TRACKERS, 'picklecast-' + code);
+    var pendingCandidates = [];
+    clientState.p2pt = p2pt;
+
+    p2pt.on('peerconnect', function(peer) {
+        // ignore duplicate peers from multiple trackers
+        if (clientState.peer) return;
+        clientState.peer = peer;
+        setStatus('Peer found, establishing connection...');
+        startSharing(stream);
+    });
+
+    p2pt.on('msg', function(peer, msg) {
+        var signal = JSON.parse(msg);
+        // display's SDP answer
+        if (signal.sdp) {
+            if (clientState.pc)
+                clientState.pc.setRemoteDescription(new RTCSessionDescription(signal.sdp)).catch(console.error);
+        // display's ICE candidates
+        } else if (signal.ice) {
+            if (clientState.pc && clientState.pc.remoteDescription)
+                clientState.pc.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(console.error);
+            else
+                pendingCandidates.push(signal.ice);
+        }
+    });
+
+    p2pt.on('trackerconnect', function() {
+        setStatus('Connected to tracker, finding peer...');
+    });
+
+    p2pt.start();
 }
 
-// websocket state change callback
-function connectionStateChange(event) {
-    console.log(event);
-    switch(peerConnection.connectionState) {
-    case "new":
-    case "checking":
-      console.log("Connecting...");
-      break;
-    case "connected":
-      console.log("Online");
-      break;
-    case "disconnected":
-      console.log("Disconnecting...");
-      // show gui, hide video
-      // displayGUI.style.display = 'flex';
-      // remoteVideo.style.display = 'none';
-      // FIXME: above doesn't work.  just reload the whole page for now
-      window.location.reload();
-      break;
-    case "closed":
-      console.log("Offline");
-      break;
-    case "failed":
-      console.log("Error");
-      break;
-    default:
-      console.log("Unknown");
-      break;
-  }
+function setStatus(msg) {
+    var el = document.getElementById('status');
+    if (el) el.textContent = msg;
 }
 
-function errorHandler(error) {
-  console.log(error);
+// --- Code input box behavior ---
+
+function setupCodeInputs() {
+    var inputs = document.querySelectorAll('.code-box');
+    inputs.forEach(function(input, i) {
+        input.addEventListener('input', function() {
+            input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (input.value && i < inputs.length - 1)
+                inputs[i + 1].focus();
+        });
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !input.value && i > 0)
+                inputs[i - 1].focus();
+        });
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text')
+                .toUpperCase().replace(/[^A-Z0-9]/g, '');
+            for (var j = 0; j < Math.min(text.length, inputs.length - i); j++)
+                inputs[i + j].value = text[j];
+            inputs[Math.min(i + text.length, inputs.length) - 1].focus();
+        });
+    });
 }
 
-// Taken from http://stackoverflow.com/a/105074/515584
-// Strictly speaking, it's not a real UUID, but it gets the job done here
-function createUUID() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-  }
-
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+function getCode() {
+    var inputs = document.querySelectorAll('.code-box');
+    var code = '';
+    inputs.forEach(function(input) { code += input.value; });
+    return code;
 }
