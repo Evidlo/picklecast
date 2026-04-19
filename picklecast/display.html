@@ -19,11 +19,11 @@
             <div class="code-box code-char"></div>
             <div class="code-box code-char"></div>
         </div>
-        <p><small><a href="#" id="enablePlayback">Click to enable video playback</a></small></p>
+        <p><small><a href="#" id="enablePlayback">Click to enable video playback and screenshare audio</a></small></p>
         <div class="status" id="status"></div>
         <p class="credit" id="credit"></p>
     </div>
-    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="remoteVideo" autoplay playsinline muted></video>
     <div id="castContainer"></div>
     <video id="castVideo" autoplay playsinline></video>
     <div id="playbackBlockedOverlay" style="display:none;">
@@ -43,12 +43,12 @@
             'Evan Widloski (<a href="https://github.com/evidlo/picklecast">Picklecast v' + VERSION + '</a>)';
 
         // user gesture needed for autoplay with audio
+        var playbackEnabled = false;
         document.getElementById('enablePlayback').addEventListener('click', function(e) {
             e.preventDefault();
-            // play+pause a dummy video to unlock autoplay for this session
-            var v = document.createElement('video');
-            v.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDE=';
-            v.play().then(function() { v.pause(); }).catch(function(){});
+            playbackEnabled = true;
+            // unmute remoteVideo so screen share audio works
+            document.getElementById('remoteVideo').muted = false;
             this.textContent = 'Video playback enabled';
             this.style.pointerEvents = 'none';
         });
