@@ -3,6 +3,8 @@ var VERSION = '0.5.0';
 var TRACKERS = [
     'wss://tracker.openwebtorrent.com',
     'wss://tracker.webtorrent.dev',
+    'wss://tracker.btorrent.xyz',
+    'wss://tracker.files.fm:7073/announce'
 ];
 
 var ICE_SERVERS = [
