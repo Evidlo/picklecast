@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/p2pt@1/dist/p2pt.iife.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="webrtc.js"></script>
+</head>
+<body>
+    <div class="container" id="displayGUI">
+        <h2>Share your screen to this display.  Open</h2>
+        <h2><span class="url" id="displayURL"></span></h2>
+        <h2>and enter this code</h2>
+        <div class="code-boxes">
+            <div class="code-box code-char"></div>
+            <div class="code-box code-char"></div>
+            <div class="code-box code-char"></div>
+            <div class="code-box code-char"></div>
+        </div>
+        <p><small><a href="#" id="enablePlayback">Click to enable video playback and screenshare audio</a></small></p>
+        <div class="status" id="status"></div>
+        <p class="credit" id="credit"></p>
+    </div>
+    <video id="remoteVideo" autoplay playsinline muted></video>
+    <div id="castContainer"></div>
+    <video id="castVideo" autoplay playsinline></video>
+    <div id="playbackBlockedOverlay" style="display:none;">
+        <p>Playback blocked — click anywhere to enable</p>
+    </div>
+
+    <script>
+        var code = generateCode();
+        var chars = document.querySelectorAll('.code-char');
+        for (var i = 0; i < 4; i++) chars[i].textContent = code[i];
+
+        var loc = window.location;
+        var url = loc.host + loc.pathname.replace(/display\.html$/, '');
+        document.getElementById('displayURL').textContent = url;
+
+        document.getElementById('credit').innerHTML =
+            'Evan Widloski (<a href="https://github.com/evidlo/picklecast">Picklecast v' + VERSION + '</a>)';
+
+        // user gesture needed for autoplay with audio
+        var playbackEnabled = false;
+        document.getElementById('enablePlayback').addEventListener('click', function(e) {
+            e.preventDefault();
+            playbackEnabled = true;
+            // unmute remoteVideo so screen share audio works
+            document.getElementById('remoteVideo').muted = false;
+            this.textContent = 'Video playback enabled';
+            this.style.pointerEvents = 'none';
+        });
+
+        initDisplay(code);
+    </script>
+</body>
+</html>
