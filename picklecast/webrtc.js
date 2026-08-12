@@ -1,13 +1,9 @@
 var VERSION = '0.5.0';
 
-var TRACKERS = [
-    'wss://tracker.openwebtorrent.com',
-    'wss://tracker.webtorrent.dev',
-    'wss://tracker.btorrent.xyz',
-    'wss://tracker.files.fm:7073/announce'
-];
+// TRACKERS and transport selection live in signaling.js
 
-var ICE_SERVERS = [
+// STUN is pointless (and slow to time out) when running fully offline
+var ICE_SERVERS = (window.PICKLECAST_CONFIG || {}).localOnly ? [] : [
     {urls: 'stun:stun.l.google.com:19302'},
     {urls: 'stun:stun.cloudflare.com:3478'},
 ];
@@ -22,7 +18,7 @@ function generateCode() {
 }
 
 function initDisplay(code) {
-    var p2pt = new P2PT(TRACKERS, 'picklecast-' + code);
+    var p2pt = createTransport('picklecast-' + code);
     var pc = null;
     var pendingCandidates = [];
 
@@ -184,7 +180,7 @@ function initClient(code, stream) {
     if (clientState.p2pt) clientState.p2pt.destroy();
     clientState = {p2pt: null, pc: null, stream: null, peer: null, code: code};
 
-    var p2pt = new P2PT(TRACKERS, 'picklecast-' + code);
+    var p2pt = createTransport('picklecast-' + code);
     var pendingCandidates = [];
     clientState.p2pt = p2pt;
 
@@ -251,6 +247,12 @@ function startDisplayCast(peer, p2pt, cast) {
     document.getElementById('displayGUI').style.display = 'none';
 
     if (cast.type === 'youtube') {
+        // YouTube iframe API can't load without internet access
+        if (typeof YT === 'undefined' || !YT.Player) {
+            document.getElementById('displayGUI').style.display = '';
+            setStatus('YouTube playback needs an internet connection.');
+            return;
+        }
         // create YouTube iframe
         var container = document.getElementById('castContainer');
         container.style.display = 'block';

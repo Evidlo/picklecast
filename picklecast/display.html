@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/p2pt@1/dist/p2pt.iife.js"></script>
+    <script src="config.js"></script>
+    <script src="p2pt.iife.js"></script>
+    <!-- unavailable offline; YouTube casting is skipped in that case -->
     <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="signaling.js"></script>
     <script src="webrtc.js"></script>
 </head>
 <body>
@@ -36,8 +39,15 @@
         for (var i = 0; i < 4; i++) chars[i].textContent = code[i];
 
         var loc = window.location;
-        var url = loc.host + loc.pathname.replace(/display\.html$/, '');
-        document.getElementById('displayURL').textContent = url;
+        // the local server serves the display at /display, github pages at /display.html
+        var dir = loc.pathname.replace(/display(\.html)?$/, '');
+        document.getElementById('displayURL').textContent = loc.host + dir;
+
+        // when served by a local picklecast server, show its LAN address
+        // instead of whatever hostname this display happened to use
+        window.addEventListener('picklecast-serverinfo', function(e) {
+            document.getElementById('displayURL').textContent = e.detail.address + dir;
+        });
 
         document.getElementById('credit').innerHTML =
             'Evan Widloski (<a href="https://github.com/evidlo/picklecast">Picklecast v' + VERSION + '</a>)';

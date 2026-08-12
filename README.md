@@ -16,6 +16,17 @@ Picklecast is a client-side application that uses [p2pt](https://github.com/subi
 
 The app is hosted entirely on Github pages and has no backend (aside from public Webtorrent servers).
 
+## Offline Mode
+
+Picklecast can run in an offline setting by locally hosting a small Python handshake server to connect the WebRTC clients.
+
+    $ pip install picklecast
+    $ picklecast --local
+    Server address: 192.168.1.193
+    Display URL:  https://192.168.1.193:8443/display
+    Client URL:   https://192.168.1.193:8443/
+    Public trackers disabled (--local)
+
 ## Caveats
 
 - Audio sharing only supported from Chrome ([bugzilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1541425)).

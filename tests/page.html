@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>picklecast test harness</title>
+<script src="../picklecast/config.js"></script>
+<script src="../picklecast/p2pt.iife.js"></script>
+<script src="../picklecast/signaling.js"></script>
+<script src="../picklecast/webrtc.js"></script>
+</head>
+<body>
+<!-- the elements webrtc.js reaches for -->
+<div id="displayGUI"></div>
+<video id="remoteVideo" autoplay playsinline muted></video>
+<div id="castContainer"></div>
+<video id="castVideo" autoplay playsinline></video>
+<div id="playbackBlockedOverlay" style="display:none"></div>
+<div id="status"></div>
+<div id="controls" style="display:none"></div>
+
+<script>
+// Runs both halves of a session in one page: initDisplay() plays the display,
+// initClient() shares a fake camera at it.  Milestones are printed with a
+// TEST: prefix, which test_browser.py watches for over the devtools protocol.
+function report(msg) { console.log('TEST:' + msg); }
+window.onerror = function(m) { report('error ' + m); };
+
+var code = 'TEST';
+
+initDisplay(code);
+report('display-started');
+
+var video = document.getElementById('remoteVideo');
+var sawTrack = false;
+setInterval(function() {
+    if (!sawTrack && video.srcObject && video.srcObject.getTracks().length) {
+        sawTrack = true;
+        report('display-ontrack tracks=' + video.srcObject.getTracks().length);
+    }
+}, 200);
+
+setTimeout(function() {
+    navigator.mediaDevices.getUserMedia({video: true, audio: false}).then(function(stream) {
+        report('client-has-media');
+        initClient(code, stream);
+        setInterval(function() {
+            if (clientState.peer && !clientState.reportedPeer) {
+                clientState.reportedPeer = true;
+                report('client-found-peer');
+            }
+            if (clientState.pc && clientState.pc.connectionState === 'connected'
+                && !clientState.reportedConnected) {
+                clientState.reportedConnected = true;
+                report('client-connected');
+            }
+        }, 200);
+    }).catch(function(e) { report('error getUserMedia ' + e.message); });
+}, 2000);
+</script>
+</body>
+</html>

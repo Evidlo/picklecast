@@ -13,3 +13,5 @@ htmlcov
 dist/
 # stdeb output dir
 deb_dist/
+# test certs, browser profiles
+tests/.scratch/
