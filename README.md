@@ -1,5 +1,7 @@
 # picklecast - WebRTC Screen Caster
 
+<img src="logo.svg" width="250"/>
+
 Eliminate your dependence on Chromecast!
 
 Screen share to a RaspberryPi or display computer connected to a projector or TV.
