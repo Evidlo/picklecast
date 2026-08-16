@@ -181,6 +181,33 @@ class WebSocket:
             pass
 
 
+# ------------------------------------------------------------------- metrics
+class Metrics:
+    """Prometheus metrics."""
+    
+    def __init__(self):
+        self.metrics = {}
+
+    def create_counter(self, name, description):
+        self.metrics[name] = {}
+        self.metrics[name]['value'] = 0
+        self.metrics[name]['desc'] = description
+
+    def increment_counter(self, name):
+        self.metrics[name]['value'] += 1
+
+    def get_names(self):
+        names = []
+        for n in self.metrics:
+            names.append(n)
+        return names
+
+    def get_value(self, name):
+        return self.metrics[name]['value']
+
+    def get_desc(self, name):
+        return self.metrics[name]['desc']
+    
 # ------------------------------------------------------------------- rooms
 
 class Rooms:
@@ -220,6 +247,7 @@ class Server:
         self.address = address
         self.local_only = local_only
         self.rooms = Rooms()
+        self.metrics = Metrics()
 
     # -- http
 
@@ -311,8 +339,13 @@ class Server:
         # basic URL rewriting
         if path == '/':
             path = 'index.html'
-        if path in ('/display', '/display.html'):
+            self.metrics.increment_counter('index_requests_total')
+        elif path in ('/display', '/display.html'):
             path = 'display.html'
+            self.metrics.increment_counter('display_requests_total')
+        elif path == '/metrics':
+            path = 'metrics.html'
+            self.metrics.increment_counter('metrics_requests_total')
         path = path.lstrip('/')
 
         file_path = (self.base_dir / path).resolve()
@@ -330,6 +363,13 @@ class Server:
             return
 
         body = file_path.read_bytes()
+
+        # If requesting metrics, add the data
+        if path == 'metrics.html':
+            for n in self.metrics.get_names():
+                body += f"\n# {self.metrics.get_desc(n)}\n".encode()
+                body += f"{n}={self.metrics.get_value(n)}\n".encode()
+            
         mime = MIME_TYPES.get(file_path.suffix, "application/octet-stream")
         print("HTTP GET {} 200 OK".format(file_path))
         self.respond(writer, "200 OK", body if method == 'GET' else b'', mime)
@@ -490,6 +530,15 @@ def run(*, port, host, base_dir, certificate, local, **_):
 
     server = Server(base_dir, address, local)
 
+    # Initialize Prometheus metrics
+    server.metrics.create_counter('index_requests_total',
+                                  'Cummulative number of requests for index.html')
+    server.metrics.create_counter('display_requests_total',
+                                  'Cummulative number of requests for display/display.html')
+    server.metrics.create_counter('metrics_requests_total',
+                                  'Cummulative number of requests for metrics')
+    
+    # Start the server
     async def serve():
         srv = await asyncio.start_server(server.handle, host, port, ssl=ssl_context)
         async with srv:
@@ -543,7 +592,7 @@ def main():
                         help="Disable public tracker fallback (offline only)")
     parser.add_argument('--base_dir', metavar='DIR', type=str,
                         default=Path(__file__).parent,
-                        help="Base directory containing custom index.html/display.html")
+                        help="Base directory containing custom index.html/display.html/metrics.html")
     parser.add_argument('--certificate', metavar='FILE', type=str,
                         default=default_cert_path(),
                         help="Path to certificate (generated if missing)")
