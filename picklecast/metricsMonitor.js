@@ -1,4 +1,4 @@
-async function metricsMonitor(pcFunction, delay) {
+async function metricsMonitor(pcFunction, pcType, delay) {
 
     // Get the latest peer connection
     pc = pcFunction();
@@ -17,24 +17,32 @@ async function metricsMonitor(pcFunction, delay) {
 		
 		// See all possible reports
 		// console.log(report.type);
+		let metric;
 		
 		// Standard
 		if (report.type === 'transport' && report.selectedCandidatePairId) {
-                    console.log('Bytes sent:', report.bytesSent);
-                    console.log('Bytes received:', report.bytesReceived);
+                    metric=`${pcType}_bytes_sent=${report.bytesSent}`;
+		    console.log(metric);
+                    metric=`${pcType}_bytes_recv=${report.bytesReceived}`;
+		    console.log(metric);
 		}
 		
 		// Firefox
 		if (report.type === 'candidate-pair' && report.selected) {
-                    console.log('Bytes sent:', report.bytesSent);
-                    console.log('Bytes received:', report.bytesReceived);
+                    metric=`${pcType}_bytes_sent=${report.bytesSent}`;
+		    console.log(metric);
+                    metric=`${pcType}_bytes_recv=${report.bytesReceived}`;
+		    console.log(metric);
 		}
 		
 		// All?
 		if (report.type === 'remote-inbound-rtp') {
-                    console.log('RTT (s):', report.roundTripTime);
-                    console.log('Packets Lost:', report.packetsLost);
-                    console.log('Jitter:', report.jitter);
+                    metric=`${pcType}_rtt_s=${report.roundTripTime}`;
+		    console.log(metric);
+                    metric=`${pcType}_packets_lost=${report.packetsLost}`;
+		    console.log(metric);
+		    metric=`${pcType}_jitter=${report.jitter}`;
+		    console.log(metric);
 		}
             });
 	}
@@ -42,7 +50,7 @@ async function metricsMonitor(pcFunction, delay) {
 	console.error("Getting metrics failed:".err);
     } finally {
 	// Schedule next run after this one completes
-	setTimeout(metricsMonitor, delay, pcFunction, delay);
+	setTimeout(metricsMonitor, delay, pcFunction, pcType, delay);
     }
 }
 

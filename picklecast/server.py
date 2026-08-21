@@ -339,13 +339,13 @@ class Server:
         # basic URL rewriting
         if path == '/':
             path = 'index.html'
-            self.metrics.increment_counter('index_requests_total')
+            self.metrics.increment_counter('server_index_requests_total')
         elif path in ('/display', '/display.html'):
             path = 'display.html'
-            self.metrics.increment_counter('display_requests_total')
+            self.metrics.increment_counter('server_display_requests_total')
         elif path == '/metrics':
             path = 'metrics.html'
-            self.metrics.increment_counter('metrics_requests_total')
+            self.metrics.increment_counter('server_metrics_requests_total')
         path = path.lstrip('/')
 
         file_path = (self.base_dir / path).resolve()
@@ -531,11 +531,11 @@ def run(*, port, host, base_dir, certificate, local, **_):
     server = Server(base_dir, address, local)
 
     # Initialize Prometheus metrics
-    server.metrics.create_counter('index_requests_total',
+    server.metrics.create_counter('server_index_requests_total',
                                   'Cummulative number of requests for index.html')
-    server.metrics.create_counter('display_requests_total',
+    server.metrics.create_counter('server_display_requests_total',
                                   'Cummulative number of requests for display/display.html')
-    server.metrics.create_counter('metrics_requests_total',
+    server.metrics.create_counter('server_metrics_requests_total',
                                   'Cummulative number of requests for metrics')
     
     # Start the server

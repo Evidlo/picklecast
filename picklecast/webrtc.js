@@ -23,7 +23,7 @@ function initDisplay(code) {
     var pendingCandidates = [];
 
     // Intiate metrics monitor to run every 5 seconds
-    metricsMonitor( () => {return pc}, 5000);
+    metricsMonitor( () => {return pc}, "receiver", 5000);
     
     function resetDisplay() {
         if (pc) { pc.close(); pc = null; }
@@ -125,7 +125,7 @@ function initDisplay(code) {
 var clientState = {p2pt: null, pc: null, stream: null, peer: null, code: null};
 
 // Intiate metrics monitor to run every 5s
-metricsMonitor( () => { return clientState.pc;}, 5000);
+metricsMonitor( () => { return clientState.pc;}, "sender", 5000);
 
 function stopSharing(notify) {
     // tell display we stopped
