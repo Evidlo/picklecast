@@ -22,6 +22,9 @@ function initDisplay(code) {
     var pc = null;
     var pendingCandidates = [];
 
+    // Intiate metrics monitor to run every 5 seconds
+    metricsMonitor( () => {return pc}, 5000);
+    
     function resetDisplay() {
         if (pc) { pc.close(); pc = null; }
         pendingCandidates = [];
@@ -64,6 +67,7 @@ function initDisplay(code) {
             // ignore duplicate offers from multiple trackers
             if (pc) return;
             pc = new RTCPeerConnection({iceServers: ICE_SERVERS});
+
             pc.ontrack = function(event) {
                 document.getElementById('displayGUI').style.display = 'none';
                 var video = document.getElementById('remoteVideo');
@@ -119,6 +123,9 @@ function initDisplay(code) {
 }
 
 var clientState = {p2pt: null, pc: null, stream: null, peer: null, code: null};
+
+// Intiate metrics monitor to run every 5s
+metricsMonitor( () => { return clientState.pc;}, 5000);
 
 function stopSharing(notify) {
     // tell display we stopped
