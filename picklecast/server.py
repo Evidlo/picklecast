@@ -188,9 +188,10 @@ class Metrics:
     def __init__(self):
         self.metrics = {}
 
-    def create_counter(self, name, description):
+    def create_counter(self, name, prom_name, description):
         self.metrics[name] = {}
         self.metrics[name]['value'] = 0
+        self.metrics[name]['prom_name'] = prom_name
         self.metrics[name]['desc'] = description
 
     def increment_counter(self, name):
@@ -205,9 +206,12 @@ class Metrics:
     def get_value(self, name):
         return self.metrics[name]['value']
 
+    def get_prom_name(self, name):
+        return self.metrics[name]['prom_name']
+
     def get_desc(self, name):
         return self.metrics[name]['desc']
-    
+
 # ------------------------------------------------------------------- rooms
 
 class Rooms:
@@ -343,7 +347,7 @@ class Server:
         elif path in ('/display', '/display.html'):
             path = 'display.html'
             self.metrics.increment_counter('server_display_requests_total')
-        elif path == '/metrics':
+        elif path == '/metrics' or path == '/metrics.html':
             path = 'metrics.html'
             self.metrics.increment_counter('server_metrics_requests_total')
         path = path.lstrip('/')
@@ -368,7 +372,7 @@ class Server:
         if path == 'metrics.html':
             for n in self.metrics.get_names():
                 body += f"\n# {self.metrics.get_desc(n)}\n".encode()
-                body += f"{n}={self.metrics.get_value(n)}\n".encode()
+                body += f"{self.metrics.get_prom_name(n)} {self.metrics.get_value(n)}\n".encode()
             
         mime = MIME_TYPES.get(file_path.suffix, "application/octet-stream")
         print("HTTP GET {} 200 OK".format(file_path))
@@ -532,10 +536,13 @@ def run(*, port, host, base_dir, certificate, local, **_):
 
     # Initialize Prometheus metrics
     server.metrics.create_counter('server_index_requests_total',
+                                  f'server_requests_total{{page="index"}}',
                                   'Cummulative number of requests for index.html')
     server.metrics.create_counter('server_display_requests_total',
+                                  f'server_requests_total{{page="display"}}',
                                   'Cummulative number of requests for display/display.html')
     server.metrics.create_counter('server_metrics_requests_total',
+                                  f'server_requests_total{{page="metrics"}}',
                                   'Cummulative number of requests for metrics')
     
     # Start the server

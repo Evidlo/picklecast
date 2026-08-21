@@ -21,27 +21,27 @@ async function metricsMonitor(pcFunction, pcType, delay) {
 		
 		// Standard
 		if (report.type === 'transport' && report.selectedCandidatePairId) {
-                    metric=`${pcType}_bytes_sent=${report.bytesSent}`;
+                    metric=`transported_bytes{endpoint="${pcType}",type="send"} ${report.bytesSent}`;
 		    console.log(metric);
-                    metric=`${pcType}_bytes_recv=${report.bytesReceived}`;
+                    metric=`transported_bytes{endpoint="${pcType}",type="recv"} ${report.bytesReceived}`;
 		    console.log(metric);
 		}
 		
 		// Firefox
 		if (report.type === 'candidate-pair' && report.selected) {
-                    metric=`${pcType}_bytes_sent=${report.bytesSent}`;
+                    metric=`transported_bytes{endpoint="${pcType}",type="send"} ${report.bytesSent}`;
 		    console.log(metric);
-                    metric=`${pcType}_bytes_recv=${report.bytesReceived}`;
+                    metric=`transported_bytes{endpoint="${pcType}",type="recv"} ${report.bytesReceived}`;
 		    console.log(metric);
 		}
 		
 		// All?
 		if (report.type === 'remote-inbound-rtp') {
-                    metric=`${pcType}_rtt_s=${report.roundTripTime}`;
+                    metric=`${pcType}_rtt_s ${report.roundTripTime}`;
 		    console.log(metric);
-                    metric=`${pcType}_packets_lost=${report.packetsLost}`;
+                    metric=`${pcType}_packets_lost ${report.packetsLost}`;
 		    console.log(metric);
-		    metric=`${pcType}_jitter=${report.jitter}`;
+		    metric=`${pcType}_jitter ${report.jitter}`;
 		    console.log(metric);
 		}
             });
