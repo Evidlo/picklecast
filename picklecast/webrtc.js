@@ -22,9 +22,11 @@ function initDisplay(code) {
     var pc = null;
     var pendingCandidates = [];
 
-    // Intiate metrics monitor to run every 5 seconds
-    metricsMonitor( () => {return pc}, "receiver", 5000);
-    
+    // Intiate metrics monitor to run every so often
+    if ( CONFIG.prom_enable_display) {
+	metricsMonitor( () => {return pc}, "display", CONFIG.prom_endpoint_update_dt);
+    }
+
     function resetDisplay() {
         if (pc) { pc.close(); pc = null; }
         pendingCandidates = [];
@@ -125,7 +127,9 @@ function initDisplay(code) {
 var clientState = {p2pt: null, pc: null, stream: null, peer: null, code: null};
 
 // Intiate metrics monitor to run every 5s
-metricsMonitor( () => { return clientState.pc;}, "sender", 5000);
+if ( CONFIG.prom_enable_source) {
+    metricsMonitor( () => { return clientState.pc;}, "source", CONFIG.prom_endpoint_update_dt);
+}
 
 function stopSharing(notify) {
     // tell display we stopped

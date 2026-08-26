@@ -212,6 +212,14 @@ class Metrics:
     def get_desc(self, name):
         return self.metrics[name]['desc']
 
+    def update_metrics(self, obj):
+        name = obj['name']
+        if name not in self.metrics:
+            self.metrics[name] = {}
+        self.metrics[name]['value'] = obj['value']
+        self.metrics[name]['prom_name'] = obj['prom_name']
+        self.metrics[name]['desc'] = obj['desc']
+
 # ------------------------------------------------------------------- rooms
 
 class Rooms:
@@ -246,12 +254,20 @@ class Rooms:
 
 class Server:
 
-    def __init__(self, base_dir, address, local_only):
+    def __init__(self, base_dir, address, local_only,
+                 prom_enable_any,
+                 prom_enable_server, prom_enable_source, prom_enable_display,
+                 prom_endpoint_update_dt):
         self.base_dir = Path(base_dir).expanduser().resolve()
         self.address = address
         self.local_only = local_only
         self.rooms = Rooms()
-        self.metrics = Metrics()
+        self.prom_enable = prom_enable_any
+        self.prom_enable_server = prom_enable_server
+        self.prom_enable_source = prom_enable_source
+        self.prom_enable_display = prom_enable_display
+        self.prom_endpoint_update_dt = prom_endpoint_update_dt
+        self.metrics = Metrics()        
 
     # -- http
 
@@ -269,11 +285,17 @@ class Server:
 
         method, path, headers = request
 
+        content_length = int(headers.get('content-length',0))
+        if content_length > 0:
+            raw_body = await reader.readexactly(content_length)
+        else:
+            raw_body = ""
+
         try:
             if headers.get('upgrade', '').lower() == 'websocket':
                 await self.handle_websocket(reader, writer, path, headers)
             else:
-                await self.handle_http(writer, method, path)
+                await self.handle_http(writer, method, path, raw_body)
         except (ConnectionResetError, BrokenPipeError, WSError, ssl.SSLError) as e:
             log.debug("connection error: %s", e)
         finally:
@@ -301,6 +323,7 @@ class Server:
                 continue
             name, _, value = line.decode('latin-1').partition(':')
             headers[name.strip().lower()] = value.strip()
+
         return method, path, headers
 
     def respond(self, writer, status, body, content_type='text/plain'):
@@ -316,10 +339,34 @@ class Server:
         ).format(status, content_type, len(body))
         writer.write(head.encode() + body)
 
-    async def handle_http(self, writer, method, path):
+    async def handle_http(self, writer, method, path, raw_body):
+        import re
+        import sys
+        import json
+        
         path = path.split('?')[0].split('#')[0]
+        
+        if method == "POST":
 
-        if method not in ('GET', 'HEAD'):
+            # Get the POST'ed data
+            try:                
+                payload = json.loads(raw_body.decode('utf-8'))
+
+                SuppliedSecret = payload.get('secret','')
+                if SuppliedSecret == 'secret':
+                    for obj in payload['data']:
+                        self.metrics.update_metrics(obj)
+
+            except Exception as e:
+                print(f"Error parsing POST data ({payoad}): {e}")
+                
+            mime = MIME_TYPES.get(".txt")
+            print("HTTP POST {} 200 OK".format(path))
+            self.respond(writer, "200 OK", 'success', mime)
+            await writer.drain()
+            return
+
+        elif method not in ('GET', 'HEAD'):
             self.respond(writer, "405 Method Not Allowed", b'405')
             await writer.drain()
             return
@@ -330,6 +377,9 @@ class Server:
                 'local': True,
                 'localOnly': self.local_only,
                 'address': self.address,
+                'prom_enable_source': self.prom_enable_source,
+                'prom_enable_display': self.prom_enable_display,
+                'prom_endpoint_update_dt': self.prom_endpoint_update_dt
             })
             self.respond(
                 writer, "200 OK",
@@ -343,13 +393,20 @@ class Server:
         # basic URL rewriting
         if path == '/':
             path = 'index.html'
-            self.metrics.increment_counter('server_index_requests_total')
+            if self.prom_enable_server:
+                self.metrics.increment_counter('server_source_requests_total')
+
         elif path in ('/display', '/display.html'):
             path = 'display.html'
-            self.metrics.increment_counter('server_display_requests_total')
-        elif path == '/metrics' or path == '/metrics.html':
-            path = 'metrics.html'
-            self.metrics.increment_counter('server_metrics_requests_total')
+            if self.prom_enable_server:
+                self.metrics.increment_counter('server_display_requests_total')
+
+        elif self.prom_enable:
+            if path == '/metrics' or path == '/metrics.html':
+                path = 'metrics.html'
+                if self.prom_enable_server:
+                    self.metrics.increment_counter('server_metrics_requests_total')
+
         path = path.lstrip('/')
 
         file_path = (self.base_dir / path).resolve()
@@ -369,11 +426,21 @@ class Server:
         body = file_path.read_bytes()
 
         # If requesting metrics, add the data
-        if path == 'metrics.html':
-            for n in self.metrics.get_names():
-                body += f"\n# {self.metrics.get_desc(n)}\n".encode()
-                body += f"{self.metrics.get_prom_name(n)} {self.metrics.get_value(n)}\n".encode()
-            
+        if self.prom_enable:
+            if path == 'metrics.html':
+                # Include all the metrics
+                HelpIncluded = []
+                for n in sorted(self.metrics.get_names()):
+                    prom_name = self.metrics.get_prom_name(n)
+                    prom_name_help = re.sub(r'\{[^{}]*\}', '', prom_name)
+                    desc = self.metrics.get_desc(n)
+                    value = self.metrics.get_value(n)
+
+                    if prom_name_help not in HelpIncluded:
+                        HelpIncluded.append(prom_name_help)
+                        body += f"\n# HELP {prom_name_help} {desc}\n".encode()
+                    body += f"{prom_name} {value}\n".encode()
+                    
         mime = MIME_TYPES.get(file_path.suffix, "application/octet-stream")
         print("HTTP GET {} 200 OK".format(file_path))
         self.respond(writer, "200 OK", body if method == 'GET' else b'', mime)
@@ -514,7 +581,9 @@ def generate_cert(path, ip):
 
 # --------------------------------------------------------------- commands
 
-def run(*, port, host, base_dir, certificate, local, **_):
+def run(*, port, host, base_dir, certificate, local,
+        prom_enable_server, prom_enable_source, prom_enable_display, prom_endpoint_update_dt, **_):
+    # Initialize the server
     ip = get_ip() if host == '0.0.0.0' else host
     address = "{}:{}".format(ip, port)
 
@@ -532,22 +601,35 @@ def run(*, port, host, base_dir, certificate, local, **_):
         print("Public trackers disabled (--local)")
     print("Note: your browser will warn about the self-signed certificate.")
 
-    server = Server(base_dir, address, local)
+    server = Server(base_dir,
+                    address,
+                    local,
+                    prom_enable_server | prom_enable_source | prom_enable_display,
+                    prom_enable_server,
+                    prom_enable_source,
+                    prom_enable_display,
+                    prom_endpoint_update_dt)
 
-    # Initialize Prometheus metrics
-    server.metrics.create_counter('server_index_requests_total',
-                                  f'server_requests_total{{page="index"}}',
-                                  'Cummulative number of requests for index.html')
-    server.metrics.create_counter('server_display_requests_total',
-                                  f'server_requests_total{{page="display"}}',
-                                  'Cummulative number of requests for display/display.html')
-    server.metrics.create_counter('server_metrics_requests_total',
-                                  f'server_requests_total{{page="metrics"}}',
-                                  'Cummulative number of requests for metrics')
-    
+    # Initialize Prometheus flags
+    if server.prom_enable_server:
+        server.metrics.create_counter('server_source_requests_total',
+                                      f'requests_total{{endpoint="source"}}',
+                                      'Cumulative number of requests')
+
+        server.metrics.create_counter('server_display_requests_total',
+                                      f'requests_total{{endpoint="display"}}',
+                                      'Cumulative number of requests')
+        
+        server.metrics.create_counter('server_metrics_requests_total',
+                                      f'requests_total{{endpoint="metrics"}}',
+                                      'Cumulative number of requests')
+
     # Start the server
     async def serve():
-        srv = await asyncio.start_server(server.handle, host, port, ssl=ssl_context)
+        srv = await asyncio.start_server(server.handle,
+                                         host,
+                                         port,
+                                         ssl=ssl_context)
         async with srv:
             await srv.serve_forever()
 
@@ -604,6 +686,16 @@ def main():
                         default=default_cert_path(),
                         help="Path to certificate (generated if missing)")
 
+    parser.add_argument('--prom_enable_server', action='store_true', default=False,
+                        help="Enable Prometheus metrics of the server")
+    parser.add_argument('--prom_enable_source', action='store_true', default=False,
+                        help="Enable Prometheus metrics for the source endpoint")
+    parser.add_argument('--prom_enable_display', action='store_true', default=False,
+                        help="Enable Prometheus metrics for the display endpoint")
+    parser.add_argument('--prom_endpoint_update_dt', metavar='PROM_ENDPOINT_UPDATE_DT',
+                        type=int, default=5000,
+                        help="Amount of time between endpoint metrics updates (ms)")
+    
     args = parser.parse_args()
 
     # keep request logs readable when piped to a file or journald
