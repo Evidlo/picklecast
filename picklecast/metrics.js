@@ -99,7 +99,13 @@ async function metricsMonitor(pcFunction, pcType, delay) {
 
 	    // Create the data to post
 	    let PostData = {};
-	    PostData['secret'] = "secret";
+	    if (pcType == 'source') {
+		PostData['code'] = getCode();
+	    } else if (pcType == 'display') {
+		PostData['code'] = code;
+	    } else {
+		PostData['code'] = 'unknown';
+	    }
 	    PostData['data'] = metricArray;
 	    
 	    // Send the data
@@ -117,11 +123,11 @@ async function metricsMonitor(pcFunction, pcType, delay) {
 }
 
 // Push metrics back to the server
-async function pushMetrics(pcType, PostData) {
+async function pushMetrics(VarType, PostData) {
 
     let server = window.location.origin;
     let url = new URL(server);
-    url.pathname = `/post/${pcType}`;
+    url.pathname = `/post/${VarType}`;
 
     // Convert to string
     let PostDataString = JSON.stringify(PostData);

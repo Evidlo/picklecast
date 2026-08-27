@@ -39,6 +39,11 @@
         var chars = document.querySelectorAll('.code-char');
         for (var i = 0; i < 4; i++) chars[i].textContent = code[i];
 
+	// Push the code to the server
+        if (CONFIG.prom_enable_display || CONFIG.prom_enable_server) {		    
+          pushMetrics('code', {'code': code} );
+	};
+			    
         var loc = window.location;
         // the local server serves the display at /display, github pages at /display.html
         var dir = loc.pathname.replace(/display(\.html)?$/, '');

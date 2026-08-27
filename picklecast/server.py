@@ -46,6 +46,16 @@ MIME_TYPES = {
 }
 
 
+def dns_lookup(host):
+    """Get the IP number of a host."""
+    import socket
+    try:
+        resolved_ip = socket.gethostbyname(host)
+    except Exception:
+        resolved_ip = '127.0.0.1'
+    return resolved_ip
+
+
 # thanks to https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -186,39 +196,46 @@ class Metrics:
     """Prometheus metrics."""
     
     def __init__(self):
-        self.metrics = {}
+        self.code = "unset"
+        self.data = {}
 
     def create_counter(self, name, prom_name, description):
-        self.metrics[name] = {}
-        self.metrics[name]['value'] = 0
-        self.metrics[name]['prom_name'] = prom_name
-        self.metrics[name]['desc'] = description
+        self.data[name] = {}
+        self.data[name]['value'] = 0
+        self.data[name]['prom_name'] = prom_name
+        self.data[name]['desc'] = description
+
+    def metric_defined(self, name):
+        if name in self.data:
+            return True
+        else:
+            return False
 
     def increment_counter(self, name):
-        self.metrics[name]['value'] += 1
+        self.data[name]['value'] += 1
 
     def get_names(self):
         names = []
-        for n in self.metrics:
+        for n in self.data:
             names.append(n)
         return names
 
     def get_value(self, name):
-        return self.metrics[name]['value']
+        return self.data[name]['value']
 
     def get_prom_name(self, name):
-        return self.metrics[name]['prom_name']
+        return self.data[name]['prom_name']
 
     def get_desc(self, name):
-        return self.metrics[name]['desc']
+        return self.data[name]['desc']
 
-    def update_metrics(self, obj):
+    def update_data(self, obj):
         name = obj['name']
-        if name not in self.metrics:
-            self.metrics[name] = {}
-        self.metrics[name]['value'] = obj['value']
-        self.metrics[name]['prom_name'] = obj['prom_name']
-        self.metrics[name]['desc'] = obj['desc']
+        if name not in self.data:
+            self.data[name] = {}
+        self.data[name]['value'] = obj['value']
+        self.data[name]['prom_name'] = obj['prom_name']
+        self.data[name]['desc'] = obj['desc']
 
 # ------------------------------------------------------------------- rooms
 
@@ -254,20 +271,14 @@ class Rooms:
 
 class Server:
 
-    def __init__(self, base_dir, address, local_only,
-                 prom_enable_any,
-                 prom_enable_server, prom_enable_source, prom_enable_display,
-                 prom_endpoint_update_dt):
+    def __init__(self, base_dir, address, local_only, PromFlags, LockDownDisplayFlags):
         self.base_dir = Path(base_dir).expanduser().resolve()
         self.address = address
         self.local_only = local_only
         self.rooms = Rooms()
-        self.prom_enable = prom_enable_any
-        self.prom_enable_server = prom_enable_server
-        self.prom_enable_source = prom_enable_source
-        self.prom_enable_display = prom_enable_display
-        self.prom_endpoint_update_dt = prom_endpoint_update_dt
-        self.metrics = Metrics()        
+        self.prom_flags = PromFlags
+        self.lock_down_display_flags = LockDownDisplayFlags
+        self.metrics = Metrics()
 
     # -- http
 
@@ -285,7 +296,7 @@ class Server:
 
         method, path, headers = request
 
-        content_length = int(headers.get('content-length',0))
+        content_length = int(headers.get('content-length', 0))
         if content_length > 0:
             raw_body = await reader.readexactly(content_length)
         else:
@@ -341,27 +352,42 @@ class Server:
 
     async def handle_http(self, writer, method, path, raw_body):
         import re
-        import sys
         import json
-        
+
         path = path.split('?')[0].split('#')[0]
-        
+
         if method == "POST":
 
-            # Get the POST'ed data
-            try:                
+            # Debugging messages for POST
+            PostDebug = False
+
+            # Get the POST data
+            try:
                 payload = json.loads(raw_body.decode('utf-8'))
 
-                SuppliedSecret = payload.get('secret','')
-                if SuppliedSecret == 'secret':
-                    for obj in payload['data']:
-                        self.metrics.update_metrics(obj)
+                if path == '/post/code':
+                    code_set = payload['code']
+                    self.metrics.code = code_set
+                    if PostDebug:
+                        print("HTTP POST {} - code={} set".format(path, code_set))
+                else:
+                    code_recv = payload.get('code', 'missing')
+                    if self.metrics.code == code_recv:
+                        for obj in payload['data']:
+                            self.metrics.update_data(obj)
+                        if PostDebug:
+                            print("HTTP POST {} - code={} good".format(path, code_recv))
+                    else:
+                        if PostDebug:
+                            print("HTTP POST {} - code={} bad".format(path, code_recv))
 
             except Exception as e:
-                print(f"Error parsing POST data ({payoad}): {e}")
-                
+                if PostDebug:
+                    print(f"Error parsing POST data ({payload}): {e}")
+
             mime = MIME_TYPES.get(".txt")
-            print("HTTP POST {} 200 OK".format(path))
+            if PostDebug:
+                print("HTTP POST {} 200 OK".format(path))
             self.respond(writer, "200 OK", 'success', mime)
             await writer.drain()
             return
@@ -377,9 +403,9 @@ class Server:
                 'local': True,
                 'localOnly': self.local_only,
                 'address': self.address,
-                'prom_enable_source': self.prom_enable_source,
-                'prom_enable_display': self.prom_enable_display,
-                'prom_endpoint_update_dt': self.prom_endpoint_update_dt
+                'prom_enable_source': self.prom_flags['enable']['source'],
+                'prom_enable_display': self.prom_flags['enable']['display'],
+                'prom_endpoint_update_dt': self.prom_flags['update_dt'],
             })
             self.respond(
                 writer, "200 OK",
@@ -391,21 +417,39 @@ class Server:
             return
 
         # basic URL rewriting
+        remote_ip, remote_port = writer.get_extra_info('peername')
+
         if path == '/':
             path = 'index.html'
-            if self.prom_enable_server:
+            if self.prom_flags['enable']['source']:
+                if not self.metrics.metric_defined('server_source_requests_total'):
+                    self.metrics.create_counter('server_source_requests_total',
+                                                'requests_total{endpoint="source"}',
+                                                'Cumulative number of requests')
                 self.metrics.increment_counter('server_source_requests_total')
 
         elif path in ('/display', '/display.html'):
-            path = 'display.html'
-            if self.prom_enable_server:
-                self.metrics.increment_counter('server_display_requests_total')
+            if remote_ip in self.lock_down_display_flags['allowed']:
+                path = 'display.html'
+                if self.prom_flags['enable']['display']:
+                    if not self.metrics.metric_defined('server_display_requests_total'):
+                        self.metrics.create_counter('server_display_requests_total',
+                                                    'requests_total{endpoint="display"}',
+                                                    'Cumulative number of requests')
+                    self.metrics.increment_counter('server_display_requests_total')
+            else:
+                path = "BLOCKED"
 
-        elif self.prom_enable:
+        elif self.prom_flags['enable']['any']:
             if path == '/metrics' or path == '/metrics.html':
-                path = 'metrics.html'
-                if self.prom_enable_server:
-                    self.metrics.increment_counter('server_metrics_requests_total')
+                if remote_ip in self.prom_flags['allowed_hosts']:
+                    path = 'metrics.html'
+                    if self.prom_flags['enable']['server']:
+                        if not self.metrics.metric_defined('server_metrics_requests_total'):
+                            self.metrics.create_counter('server_metrics_requests_total',
+                                                        'requests_total{endpoint="metrics"}',
+                                                        'Cumulative number of requests')
+                        self.metrics.increment_counter('server_metrics_requests_total')
 
         path = path.lstrip('/')
 
@@ -426,7 +470,7 @@ class Server:
         body = file_path.read_bytes()
 
         # If requesting metrics, add the data
-        if self.prom_enable:
+        if self.prom_flags['enable']['any']:
             if path == 'metrics.html':
                 # Include all the metrics
                 HelpIncluded = []
@@ -440,7 +484,7 @@ class Server:
                         HelpIncluded.append(prom_name_help)
                         body += f"\n# HELP {prom_name_help} {desc}\n".encode()
                     body += f"{prom_name} {value}\n".encode()
-                    
+
         mime = MIME_TYPES.get(file_path.suffix, "application/octet-stream")
         print("HTTP GET {} 200 OK".format(file_path))
         self.respond(writer, "200 OK", body if method == 'GET' else b'', mime)
@@ -582,11 +626,41 @@ def generate_cert(path, ip):
 # --------------------------------------------------------------- commands
 
 def run(*, port, host, base_dir, certificate, local,
-        prom_enable_server, prom_enable_source, prom_enable_display, prom_endpoint_update_dt, **_):
-    # Initialize the server
+        prom_enable_server,
+        prom_enable_source, prom_enable_display,
+        prom_endpoint_update_dt,
+        prom_allowed_hosts,
+        lock_down_display_enable, lock_down_display_override,
+        **_):
+    # Get the address of the server
     ip = get_ip() if host == '0.0.0.0' else host
     address = "{}:{}".format(ip, port)
 
+    # Initialize variables
+    PromFlags = {}
+    PromFlags['update_dt'] = prom_endpoint_update_dt
+    PromFlags['enable'] = {}
+    PromFlags['enable']['server'] = prom_enable_server
+    PromFlags['enable']['source'] = prom_enable_source
+    PromFlags['enable']['display'] = prom_enable_display
+    PromFlags['enable']['any'] = prom_enable_server | prom_enable_source | prom_enable_display
+    PromFlags['allowed_hosts'] = []
+    PromFlags['allowed_hosts'].append(dns_lookup(ip))
+    for h in prom_allowed_hosts:
+        resolved_ip = dns_lookup(h)
+        if resolved_ip not in PromFlags['allowed_hosts']:
+            PromFlags['allowed_hosts'].append(resolved_ip)
+
+    LockDownDisplayFlags = {}
+    LockDownDisplayFlags['enable'] = lock_down_display_enable
+    LockDownDisplayFlags['allowed'] = []
+    LockDownDisplayFlags['allowed'].append(dns_lookup(ip))
+    for h in lock_down_display_override:
+        resolved_ip = dns_lookup(h)
+        if resolved_ip not in LockDownDisplayFlags['allowed']:
+            LockDownDisplayFlags['allowed'].append(resolved_ip)
+
+    # Setup certificate and start the server
     certificate = Path(certificate).expanduser()
     if not certificate.exists():
         generate_cert(certificate, ip)
@@ -597,32 +671,16 @@ def run(*, port, host, base_dir, certificate, local,
     print("Server address:", ip)
     print("Display URL:  https://{}/display".format(address))
     print("Client URL:   https://{}/".format(address))
+    if LockDownDisplayFlags['enable']:
+        print(f"Hosts allowed to connect to display: {" ".join(LockDownDisplayFlags['allowed'])}")
+    if PromFlags['enable']['any']:
+        print(f"Hosts allowed to connect to get metrics: {" ".join(PromFlags['allowed_hosts'])}")
+        
     if local:
         print("Public trackers disabled (--local)")
     print("Note: your browser will warn about the self-signed certificate.")
 
-    server = Server(base_dir,
-                    address,
-                    local,
-                    prom_enable_server | prom_enable_source | prom_enable_display,
-                    prom_enable_server,
-                    prom_enable_source,
-                    prom_enable_display,
-                    prom_endpoint_update_dt)
-
-    # Initialize Prometheus flags
-    if server.prom_enable_server:
-        server.metrics.create_counter('server_source_requests_total',
-                                      f'requests_total{{endpoint="source"}}',
-                                      'Cumulative number of requests')
-
-        server.metrics.create_counter('server_display_requests_total',
-                                      f'requests_total{{endpoint="display"}}',
-                                      'Cumulative number of requests')
-        
-        server.metrics.create_counter('server_metrics_requests_total',
-                                      f'requests_total{{endpoint="metrics"}}',
-                                      'Cumulative number of requests')
+    server = Server(base_dir, address, local, PromFlags, LockDownDisplayFlags)
 
     # Start the server
     async def serve():
@@ -695,7 +753,13 @@ def main():
     parser.add_argument('--prom_endpoint_update_dt', metavar='PROM_ENDPOINT_UPDATE_DT',
                         type=int, default=5000,
                         help="Amount of time between endpoint metrics updates (ms)")
-    
+    parser.add_argument('--prom_allowed_hosts', action='append', default=['localhost'],
+                        help="Address of hosts allowed to get Prometheus metrics")
+
+    parser.add_argument('--lock_down_display_enable', action='store_true', default=False,
+                        help="Lock down connections to the display to the server IP")
+    parser.add_argument('--lock_down_display_override', action='append', default=['localhost'],
+                        help="Additional hosts which are allowed to connect to display when locked down")
     args = parser.parse_args()
 
     # keep request logs readable when piped to a file or journald
